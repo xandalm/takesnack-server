@@ -2,6 +2,7 @@ const express = require('express');
 const compression = require('compression');
 const { graphqlHTTP } = require('express-graphql');
 const GQLSchema = require('./graphql');
+const { isDevelopment } = require('./config/server.config');
 const app = express();
 
 app.use(compression());
@@ -10,7 +11,7 @@ app.use(
     graphqlHTTP((req, res, { variables }) => ({
         schema: GQLSchema,
         context: { req, res },
-        graphiql: true,
+        graphiql: isDevelopment,
         customFormatErrorFn(err) {
             return {
                 code: err.code,
