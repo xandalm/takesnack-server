@@ -8,8 +8,6 @@ exports.up = function(knex) {
         table.string('name', 30).unique().notNullable();
         table.string('description', 100);
         table.dateTime('createdAt').notNullable();
-        table.dateTime('updatedAt');
-        table.dateTime('deletedAt');
     }).then(() => {
         return knex('CustomerStatus').insert([
             { name: 'ACTIVE', createdAt: new Date().toISOString() },
