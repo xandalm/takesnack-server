@@ -1,5 +1,11 @@
+#dependencies
 node_modules
 
+# development database
+**/*.sqlite
+
+# env
 .env
 
+# firebase service certificate
 firebase-adminsdk.json
