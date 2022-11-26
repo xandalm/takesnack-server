@@ -24,8 +24,11 @@ class PrivilegeControllerClass {
         try {
             const condition = Condition.from(where);
             orderBy = OrderBy.from(orderBy);
+            const priv = new Privilege;
             response = {
-                rows: await (new Privilege).getAll({ page, limit, condition, orderBy }),
+                rows: await priv.getAll({ page, limit, condition, orderBy }),
+                totalInCondition: await priv.count(condition),
+                total: await priv.count()
             };
         } catch (err) {
             if(err instanceof CustomError)

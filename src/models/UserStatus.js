@@ -48,6 +48,24 @@ class UserStatus extends Model {
         }
     }
 
+    async count(condition) {
+        var res;
+        try {
+            const { where } = this._prepareQueryConfig({ condition });
+            var [{count}] = await connection(UserStatus._tablename_)
+                .whereRaw(where.statement, where.params)
+                .count({ count: 'id' });
+            res = count;
+        } catch(err) {
+            if(isDevelopment) console.log(err);
+            if(err instanceof CustomError)
+                throw err;
+            else if(err.code === 'SQLITE_ERROR')
+                throw new CustomError("Internal server error");
+        }
+        return res;
+    }
+
     async getAll(config = {}) {
         var res = [];
         try {

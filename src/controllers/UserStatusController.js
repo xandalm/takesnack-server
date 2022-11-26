@@ -23,8 +23,11 @@ class UserStatusControllerClass {
         try {
             const condition = Condition.from(where);
             orderBy = OrderBy.from(orderBy);
+            const us = new UserStatus;
             response = {
-                rows: await (new UserStatus).getAll({ page, limit, condition, orderBy }),
+                rows: await us.getAll({ page, limit, condition, orderBy }),
+                totalInCondition: await us.count(condition),
+                total: await us.count()
             };
         } catch (err) {
             if(err instanceof CustomError)
