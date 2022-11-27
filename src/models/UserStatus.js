@@ -3,6 +3,7 @@ const connection = require("../database/connection");
 const CustomError = require("../utils/errors");
 const FieldRewriter = require("../utils/field-rewriter");
 const Model = require("./Model");
+const { SqliteError } = require("better-sqlite3");
 
 class UserStatus extends Model {
 
@@ -32,6 +33,8 @@ class UserStatus extends Model {
     get deletedAt() { return this.#props.deletedAt; }
 
     _fromDB(obj) {
+        if(typeof(obj) !== 'object')
+            throw new TypeError("'obj' must be object type");
         this.#props = {
             id: obj[`${UserStatus._tablename_}_id`],
             name: obj[`${UserStatus._tablename_}_name`],
@@ -48,7 +51,7 @@ class UserStatus extends Model {
         }
     }
 
-    async count(condition) {
+    static async count(condition) {
         var res;
         try {
             const { where } = this._prepareQueryConfig({ condition });
@@ -60,13 +63,13 @@ class UserStatus extends Model {
             if(isDevelopment) console.log(err);
             if(err instanceof CustomError)
                 throw err;
-            else if(err.code === 'SQLITE_ERROR')
+            else if(err instanceof SqliteError)
                 throw new CustomError("Internal server error");
         }
         return res;
     }
 
-    async getAll(config = {}) {
+    static async getAll(config = {}) {
         var res = [];
         try {
             const { limit, offset, where, orderBy } = this._prepareQueryConfig(config);
@@ -81,27 +84,26 @@ class UserStatus extends Model {
             if(isDevelopment) console.log(err);
             if(err instanceof CustomError)
                 throw err;
-            else if(err.code === 'SQLITE_ERROR')
+            else if(err instanceof SqliteError)
                 throw new CustomError("Internal server error");
         }
         return res;
     }
 
-    async get(id) {
+    static async get(id) {
         var res;
         try {
             var data = await connection('UserStatus')
                 .select(UserStatus.fieldRewriter.all())
-                .where({ id });
-            if(data.length > 0) {
-                this._fromDB(data[0]);
-                res = this;
-            }
+                .where({ id })
+                .first();
+            if(data)
+                res = (new UserStatus)._fromDB(data);
         } catch(err) {
             if(isDevelopment) console.log(err);
             if(err instanceof CustomError)
                 throw err;
-            else if(err.code === 'SQLITE_ERROR')
+            else if(err instanceof SqliteError)
                 throw new CustomError("Internal server error");
         }
         return res;

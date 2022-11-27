@@ -8,7 +8,7 @@ class UserStatusControllerClass {
     async getUserStatus(id) {
         var response;
         try {
-            response = await (new UserStatus).get(id);
+            response = await UserStatus.get(id);
         } catch (err) {
             if(err instanceof CustomError)
                 throw err;
@@ -23,11 +23,10 @@ class UserStatusControllerClass {
         try {
             const condition = Condition.from(where);
             orderBy = OrderBy.from(orderBy);
-            const us = new UserStatus;
             response = {
-                rows: await us.getAll({ page, limit, condition, orderBy }),
-                totalInCondition: await us.count(condition),
-                total: await us.count()
+                rows: await UserStatus.getAll({ page, limit, condition, orderBy }),
+                totalInCondition: await UserStatus.count(condition),
+                total: await UserStatus.count()
             };
         } catch (err) {
             if(err instanceof CustomError)

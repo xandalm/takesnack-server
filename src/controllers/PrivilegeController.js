@@ -9,7 +9,7 @@ class PrivilegeControllerClass {
     async getPrivilege(id) {
         var response;
         try {
-            response = await (new Privilege).get(id);
+            response = await Privilege.get(id);
         } catch (err) {
             if(err instanceof CustomError)
                 throw err;
@@ -24,11 +24,10 @@ class PrivilegeControllerClass {
         try {
             const condition = Condition.from(where);
             orderBy = OrderBy.from(orderBy);
-            const priv = new Privilege;
             response = {
-                rows: await priv.getAll({ page, limit, condition, orderBy }),
-                totalInCondition: await priv.count(condition),
-                total: await priv.count()
+                rows: await Privilege.getAll({ page, limit, condition, orderBy }),
+                totalInCondition: await Privilege.count(condition),
+                total: await Privilege.count()
             };
         } catch (err) {
             if(err instanceof CustomError)

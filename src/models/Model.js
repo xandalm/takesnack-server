@@ -1,5 +1,5 @@
 const util = require('util');
-const { LogicalCondition, RelationalCondition, Condition, RelationalOperatorEqual, RelationalOperatorStartWith, RelationalOperatorEndWith, RelationalOperatorContains } = require('../utils/condition');
+const { LogicalCondition, RelationalCondition, Condition, RelationalOperatorEqual, RelationalOperatorStartWith, RelationalOperatorEndWith, RelationalOperatorContains, RelationalOperatorNonEqual } = require('../utils/condition');
 const CustomError = require('../utils/errors');
 const { OrderBy } = require('../utils/order');
 const { DatePattern } = require('../utils/regexp-patterns');
@@ -24,7 +24,7 @@ class Model {
      * @param {Condition} condition 
      * @returns {Object}
      */
-     _getConditionStatement(condition) {
+    static _getConditionStatement(condition) {
         var { field, operator, value} = condition;
         if(value instanceof Date)
             value = value.toISOString();
@@ -36,24 +36,25 @@ class Model {
         else if((/^({null}|{undefined})$/i).test(value))
             value = value.substring(1,value.length-1);
         if(operator instanceof RelationalOperatorEqual) {
-            if(value == null) {
+            if(value == null)
                 operator = ' IS ';
-            } else 
+            else 
                 operator = ' = ';
-        }
-        else if(operator instanceof RelationalOperatorStartWith){
+        } else if(operator instanceof RelationalOperatorNonEqual) {
+            if(value == null)
+                operator = ' IS NOT ';
+            else 
+                operator = ' != ';
+        } else if(operator instanceof RelationalOperatorStartWith) {
             operator = ` LIKE `; 
             value = `${value}%`;
-        }
-        else if(operator instanceof RelationalOperatorEndWith) {
+        } else if(operator instanceof RelationalOperatorEndWith) {
             operator = ' LIKE ';
             value = `%${value}`;
-        }
-        else if(operator instanceof RelationalOperatorContains) {
+        } else if(operator instanceof RelationalOperatorContains) {
             operator = ' LIKE ';
             value = `%${value}%`;
-        }
-        else {
+        } else {
             operator = ` ${operator.toString()} `;
         }
         return {statement: `${field}${operator}?`, param: value};
@@ -65,7 +66,7 @@ class Model {
      * @param {Condition} condition
      * @returns 
      */
-    _prepareCondition(condition) {
+    static _prepareCondition(condition) {
         // throw `Invalid '${e.field}' field to apply filter`;
         var statement = '', params = [], queue = [];
         queue.push(condition);
@@ -80,7 +81,7 @@ class Model {
                 queue.unshift(condition.subconditions[0]);
                 queue.unshift('(');
             } else if(condition instanceof RelationalCondition) {
-                if(this.constructor._filterable_.includes(condition.field)){
+                if(this._filterable_.includes(condition.field)){
                     let parsed = this._getConditionStatement(condition);
                     statement = `${statement}${parsed.statement}`;
                     params.push(parsed.param);
@@ -98,15 +99,15 @@ class Model {
      * @param {OrderBy} orderBy
      * @returns 
      */
-    _prepareOrder(orderBy) {
-        if(this.constructor._sortable_.includes(orderBy?.field)) {
+    static _prepareOrder(orderBy) {
+        if(this._sortable_.includes(orderBy?.field)) {
             return { column: orderBy.field, order: orderBy.order.toString() };
             // return `${orderBy.field} ${orderBy.order}`;
         }
         throw new CustomError(`Cannot order by ${orderBy.field} field`);
     }
 
-    _prepareQueryConfig(config) {
+    static _prepareQueryConfig(config) {
         var where, order;
         const page = config.page==undefined? 1: parseToSafeInteger(config.page);
         const limit = config.limit==undefined? 20: parseToSafeInteger(config.limit);
