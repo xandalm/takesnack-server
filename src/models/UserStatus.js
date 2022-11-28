@@ -63,10 +63,10 @@ class UserStatus extends Model {
             res = count;
         } catch(err) {
             if(isDevelopment) console.log(err);
-            if(err instanceof CustomError)
-                throw err;
-            else if(err instanceof SqliteError)
+            if(err instanceof SqliteError)
                 throw new CustomError("Internal server error");
+            else
+                throw err;
         }
         return res;
     }
@@ -84,10 +84,10 @@ class UserStatus extends Model {
             res = Array.from(data).map(e => (new UserStatus)._fromDB(e));
         } catch(err) {
             if(isDevelopment) console.log(err);
-            if(err instanceof CustomError)
-                throw err;
-            else if(err instanceof SqliteError)
+            if(err instanceof SqliteError)
                 throw new CustomError("Internal server error");
+            else
+                throw err;
         }
         return res;
     }
@@ -103,10 +103,10 @@ class UserStatus extends Model {
                 res = (new UserStatus)._fromDB(data);
         } catch(err) {
             if(isDevelopment) console.log(err);
-            if(err instanceof CustomError)
-                throw err;
-            else if(err instanceof SqliteError)
+            if(err instanceof SqliteError)
                 throw new CustomError("Internal server error");
+            else
+                throw err;
         }
         return res;
     }
