@@ -11,6 +11,15 @@ class UserStatus extends Model {
     static _filterable_ = [ 'id', 'name', 'description' ];
     static _sortable_ = [ 'id', 'name', 'description', 'createdAt' ];
 
+    static fieldRewriter = new FieldRewriter();
+
+    static {
+        this.fieldRewriter.add('id', `${this._tablename_}.id`,`${UserStatus._tablename_}_id`);
+        this.fieldRewriter.add('name', `${this._tablename_}.name`,`${UserStatus._tablename_}_name`);
+        this.fieldRewriter.add('description', `${this._tablename_}.description`,`${UserStatus._tablename_}_description`);
+        this.fieldRewriter.add('createdAt', `${this._tablename_}.createdAt`,`${UserStatus._tablename_}_createdAt`);
+    }
+
     #props = {
         id: undefined,
         name: undefined,
@@ -18,13 +27,6 @@ class UserStatus extends Model {
         createdAt: undefined,
         deletedAt: undefined
     };
-
-    static fieldRewriter = new FieldRewriter({
-        id: `${UserStatus._tablename_}.id as ${UserStatus._tablename_}_id`,
-        name: `${UserStatus._tablename_}.name as ${UserStatus._tablename_}_name`,
-        description: `${UserStatus._tablename_}.description as ${UserStatus._tablename_}_description`,
-        createdAt: `${UserStatus._tablename_}.createdAt as ${UserStatus._tablename_}_createdAt`
-    });
 
     get id() { return this.#props.id; }
     get name() { return this.#props.name; }
@@ -55,7 +57,7 @@ class UserStatus extends Model {
         var res;
         try {
             const { where } = this._prepareQueryConfig({ condition });
-            var [{count}] = await connection(UserStatus._tablename_)
+            var [{count}] = await connection(this._tablename_)
                 .whereRaw(where.statement, where.params)
                 .count({ count: 'id' });
             res = count;
@@ -73,8 +75,8 @@ class UserStatus extends Model {
         var res = [];
         try {
             const { limit, offset, where, orderBy } = this._prepareQueryConfig(config);
-            var data = await connection('UserStatus')
-                .select(UserStatus.fieldRewriter.all())
+            var data = await connection(this._tablename_)
+                .select(UserStatus.fieldRewriter.transform.all())
                 .whereRaw(where.statement, where.params)
                 .orderBy(orderBy)
                 .limit(limit)
@@ -93,8 +95,8 @@ class UserStatus extends Model {
     static async get(id) {
         var res;
         try {
-            var data = await connection('UserStatus')
-                .select(UserStatus.fieldRewriter.all())
+            var data = await connection(this._tablename_)
+                .select(UserStatus.fieldRewriter.transform.all())
                 .where({ id })
                 .first();
             if(data)
