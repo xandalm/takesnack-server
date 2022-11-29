@@ -35,8 +35,9 @@ class UserStatus extends Model {
     get deletedAt() { return this.#props.deletedAt; }
 
     _fromDB(obj) {
-        if(typeof(obj) !== 'object')
-            throw new TypeError("'obj' must be object type");
+        // if it doesn't have id then it doesn't exist, so it's null
+        if(obj == undefined || obj[`${UserStatus._tablename_}_id`] == undefined)
+            return null;
         this.#props = {
             id: obj[`${UserStatus._tablename_}_id`],
             name: obj[`${UserStatus._tablename_}_name`],
