@@ -9,6 +9,15 @@ const parseToSafeInteger = (value) => {
     return value;
 }
 
+const clearStringGaps = (value) => {
+    if(typeof(value) !== 'string')
+        throw new TypeError("'value' must be string type");
+    value = value.trim();
+    value = value.replaceAll(/  +/g,' ');
+    return value;
+}
+
 module.exports = {
-    parseToSafeInteger
+    parseToSafeInteger,
+    clearStringGaps
 }
