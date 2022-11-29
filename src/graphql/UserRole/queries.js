@@ -1,4 +1,4 @@
-const { GraphQLInt, GraphQLList } = require("graphql");
+const { GraphQLInt, GraphQLNonNull } = require("graphql");
 const UserRoleController = require("../../controllers/UserRoleController");
 const { GQLInput_Condition, GQLInput_OrderBy } = require("../types");
 const { GQLObject_UserRole, GQLObject_UserRolePage } = require("./types");
@@ -19,7 +19,7 @@ const GQLQueries_UserRole = {
     userRole: {
         type: GQLObject_UserRole,
         args: {
-            id: { type: GraphQLInt }
+            id: { type: new GraphQLNonNull(GraphQLInt) }
         },
         resolve: (_, { id }) => {
             return UserRoleController.getUserRole(id);

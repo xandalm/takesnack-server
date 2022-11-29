@@ -1,4 +1,4 @@
-const { GraphQLInt, GraphQLList } = require("graphql");
+const { GraphQLInt, GraphQLNonNull } = require("graphql");
 const PrivilegeController = require("../../controllers/PrivilegeController");
 const { GQLInput_Condition, GQLInput_OrderBy } = require("../types");
 const { GQLObject_Privilege, GQLObject_PrivilegePage } = require("./types");
@@ -19,7 +19,7 @@ const GQLQueries_Privilege = {
     privilege: {
         type: GQLObject_Privilege,
         args: {
-            id: { type: GraphQLInt }
+            id: { type: new GraphQLNonNull(GraphQLInt) }
         },
         resolve: (_, { id }) => {
             return PrivilegeController.getPrivilege(id);

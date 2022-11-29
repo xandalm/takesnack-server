@@ -1,4 +1,4 @@
-const { GraphQLInt, GraphQLBoolean } = require("graphql");
+const { GraphQLInt, GraphQLBoolean, GraphQLNonNull } = require("graphql");
 const UserRoleController = require("../../controllers/UserRoleController");
 const { GQLObject_UserRole, GQLInput_UserRole, GQLObject_UserRoleGrant } = require("./types");
 
@@ -6,7 +6,7 @@ const GQLMutations_UserRole = {
     createUserRole: {
         type: GQLObject_UserRole,
         args: {
-            input: { type: GQLInput_UserRole }
+            input: { type: new GraphQLNonNull(GQLInput_UserRole) }
         },
         resolve: (_, { input }) => {
             return UserRoleController.createUserRole(input);
@@ -15,7 +15,7 @@ const GQLMutations_UserRole = {
     updateUserRole: {
         type: GQLObject_UserRole,
         args: {
-            input:  { type: GQLInput_UserRole }
+            input:  { type: new GraphQLNonNull(GQLInput_UserRole) }
         },
         resolve: (_, { input }) => {
             return UserRoleController.updateUserRole(input);
@@ -24,7 +24,7 @@ const GQLMutations_UserRole = {
     deleteUserRole: {
         type: GraphQLBoolean,
         args: {
-            id: { type: GraphQLInt }
+            id: { type: new GraphQLNonNull(GraphQLInt) }
         },
         resolve: (_, { id }) => {
             return UserRoleController.deleteUserRole(id);
@@ -33,8 +33,8 @@ const GQLMutations_UserRole = {
     grantPrivilege: {
         type: GQLObject_UserRoleGrant,
         args: {
-            roleId: { type: GraphQLInt },
-            privilegeId: { type: GraphQLInt }
+            roleId: { type: new GraphQLNonNull(GraphQLInt) },
+            privilegeId: { type: new GraphQLNonNull(GraphQLInt) }
         },
         resolve: (_, { roleId, privilegeId }) => {
             return UserRoleController.grantPrivilege(roleId, privilegeId);
@@ -43,8 +43,8 @@ const GQLMutations_UserRole = {
     removePrivilege: {
         type: GraphQLBoolean,
         args: {
-            roleId: { type: GraphQLInt },
-            privilegeId: { type: GraphQLInt }
+            roleId: { type: new GraphQLNonNull(GraphQLInt) },
+            privilegeId: { type: new GraphQLNonNull(GraphQLInt) }
         },
         resolve: (_, { roleId, privilegeId }) => {
             return UserRoleController.removePrivilege(roleId, privilegeId);
