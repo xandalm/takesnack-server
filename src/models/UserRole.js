@@ -81,13 +81,13 @@ class UserRole extends Model {
     get deletedAt() { return this.#props.deletedAt; }
     
     _fromDB(obj) {
-        if(typeof(obj) !== 'object')
-            throw new TypeError("'obj' must be object type");
+        // if it doesn't have id then it doesn't exist, so it's null
+        if(obj == undefined || obj[`${UserRole._tablename_}_id`] == undefined)
+            return null;
         this.#props = {
             id: obj[`${UserRole._tablename_}_id`],
             name: obj[`${UserRole._tablename_}_name`],
             description: obj[`${UserRole._tablename_}_description`],
-            // grants: await this.getPrivileges(),// obj?.grants,
             createdAt: obj[`${UserRole._tablename_}_createdAt`],
             updatedAt: obj[`${UserRole._tablename_}_updatedAt`],
             deletedAt: obj[`${UserRole._tablename_}_deletedAt`]
@@ -170,8 +170,8 @@ class UserRole extends Model {
 
     async insert() {
         var res;
+        this.isValid();
         try {
-            this.isValid();
             var [found] = await connection(UserRole._tablename_)
                 .select('*')
                 .where({ name: this.name });
@@ -217,13 +217,14 @@ class UserRole extends Model {
         var res;
         if(this.id == 1)
             throw new CustomError("Administrator cannot be updated");
+        this.isValid();
         try {
             var [found] = await connection(UserRole._tablename_)
                 .select('*')
-                .where({ name: this.name, deletedAt: null });
+                .where({ name: this.name });
             if(found && found.id != this.id) {
                 throw new CustomError("User role name already in use");
-            } else if(this.description != found.description || this.name != found.name) {
+            } else {
                 this.#props.updatedAt = new Date;
                 await connection(UserRole._tablename_)
                     .update({
