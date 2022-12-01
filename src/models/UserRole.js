@@ -169,7 +169,7 @@ class UserRole extends Model {
     }
 
     async insert() {
-        var res;
+        var res = false;
         this.isValid();
         try {
             var [found] = await connection(UserRole._tablename_)
@@ -189,7 +189,7 @@ class UserRole extends Model {
                             deletedAt: this.deletedAt
                         })
                         .where({ id: this.id });
-                    res = this;
+                    res = true;
                 }
             } else {
                 this.#props.createdAt = new Date;
@@ -201,7 +201,7 @@ class UserRole extends Model {
                     })
                     .returning('id');
                 this.#props.id = data.id;
-                res = this;
+                res = true;
             }
         } catch (err) {
             if(isDevelopment) console.log(err);
@@ -214,7 +214,7 @@ class UserRole extends Model {
     }
 
     async update() {
-        var res;
+        var res = false;
         if(this.id == 1)
             throw new CustomError("Administrator cannot be updated");
         this.isValid();
@@ -233,7 +233,7 @@ class UserRole extends Model {
                         updatedAt: this.updatedAt
                     })
                     .where({ id: this.id });
-                res = this;
+                res = true;
             }
         } catch (err) {
             if(isDevelopment) console.log(err);
@@ -402,12 +402,16 @@ class UserRoleGrant extends Model {
         return res;
     }
 
+    isValid() {
+        if(!this.role)
+            throw new CustomError("Role is required");
+        if(!this.privilege)
+            throw new CustomError("Privilege is required");
+    }
+
     async insert() {
-        var res;
-        if(!(this.role instanceof UserRole))
-            throw new TypeError("'role' must be UserRole type");
-        if(!(this.privilege instanceof Privilege))
-            throw new TypeError("'privilege' must be Privilege type");
+        var res = false;
+        this.isValid();
         try {
             var [found] = await connection(UserRoleGrant._tablename_)
                 .select('*')
@@ -422,7 +426,7 @@ class UserRoleGrant extends Model {
                         privilege: this.privilege.id,
                         createdAt: this.createdAt
                     });
-                res = this;
+                res = true;
             }
         } catch (err) {
             if(isDevelopment)
@@ -436,10 +440,7 @@ class UserRoleGrant extends Model {
 
     async delete() {
         var res = false;
-        if(!(this.role instanceof UserRole))
-            throw new TypeError("'role' must be UserRole type");
-        if(!(this.privilege instanceof Privilege))
-            throw new TypeError("'privilege' must be Privilege type");
+        this.isValid();
         if(this.role.id == 1)
             throw new CustomError("Administrator grants cannot be removed")
         try {
@@ -447,7 +448,6 @@ class UserRoleGrant extends Model {
             var data = await connection(UserRoleGrant._tablename_)
                 .update({ deletedAt: this.deletedAt })
                 .where({ role: this.role.id, privilege: this.privilege.id });
-            console.log(data);
             res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);

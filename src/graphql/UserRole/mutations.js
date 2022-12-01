@@ -22,7 +22,7 @@ const GQLMutations_UserRole = {
         }
     },
     deleteUserRole: {
-        type: GraphQLBoolean,
+        type: GQLObject_UserRole,
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },

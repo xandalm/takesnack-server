@@ -11,7 +11,8 @@ class UserRoleControllerClass {
         try {
             const props = Object.assign({}, input);
             const role = new UserRole(props);
-            response = await role.insert();
+            if(await role.insert())
+                response = role;
         } catch (err) {
             if(err instanceof CustomError)
                 throw err;
@@ -32,7 +33,8 @@ class UserRoleControllerClass {
                 role.name = props.name;
             if(props.hasOwnProperty('description'))
                 role.description = props.description;
-            response = await role.update();
+            if(await role.update())
+                response = role;
         } catch (err) {
             if(err instanceof CustomError)
                 throw err;
@@ -48,7 +50,8 @@ class UserRoleControllerClass {
             const role = await UserRole.get(id);
             if(!role)
                 throw new CustomError("Cannot find role");
-            response = await role.delete();
+            if(await role.delete())
+                response = role;
         } catch (err) {
             if(err instanceof CustomError)
                 throw err;
@@ -100,7 +103,8 @@ class UserRoleControllerClass {
             if(!privilege)
                 throw new CustomError("Cannot find privilege");
             const rolePrivilege = new UserRoleGrant({ role, privilege });
-            response = await rolePrivilege.insert()
+            if(await rolePrivilege.insert())
+                response = rolePrivilege;
         } catch (err) { console.log(err);
             if(err instanceof CustomError)
                 throw err;
@@ -114,7 +118,6 @@ class UserRoleControllerClass {
         var response;
         try {
             const rolePrivilege = await UserRoleGrant.get(roleId, privilegeId);
-            console.log(rolePrivilege);
             if(!rolePrivilege)
                 throw new CustomError("Cannot find role privilege");
             response = await rolePrivilege.delete();
