@@ -250,10 +250,10 @@ class UserRole extends Model {
         if(this.id == 1)
             throw new CustomError("Administrator cannot be deleted");
         try {
-            this.#props.deletedAt = new Date;
+            this.#props.deletedAt = this.deletedAt??new Date;
             await connection(UserRole._tablename_)
                 .update({ deletedAt: this.deletedAt })
-                .where({ id: this.id });
+                .where({ id: this.id, deletedAt: null });
             res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);
@@ -444,10 +444,10 @@ class UserRoleGrant extends Model {
         if(this.role.id == 1)
             throw new CustomError("Administrator grants cannot be removed")
         try {
-            this.#props.deletedAt = new Date;
+            this.#props.deletedAt = this.deletedAt??new Date;
             var data = await connection(UserRoleGrant._tablename_)
                 .update({ deletedAt: this.deletedAt })
-                .where({ role: this.role.id, privilege: this.privilege.id });
+                .where({ role: this.role.id, privilege: this.privilege.id, deletedAt: null });
             res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);

@@ -329,10 +329,10 @@ class User extends Model {
     async delete() {
         var res = false;
         try {
-            this.#props.deletedAt = new Date;
+            this.#props.deletedAt = this.deletedAt??new Date;
             await connection(User._tablename_)
                 .update({ deletedAt: this.deletedAt })
-                .where({ id: this.id });
+                .where({ id: this.id, deletedAt: null });
             res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);
