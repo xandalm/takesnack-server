@@ -1,5 +1,7 @@
 const { GraphQLString } = require("graphql");
 const { GraphQLSchema, GraphQLObjectType } = require("graphql");
+const GQLMutations_Customer = require("./Customer/mutations");
+const GQLQueries_Customer = require("./Customer/queries");
 const GQLQueries_CustomerStatus = require("./CustomerStatus/queries");
 const GQLQueries_Privilege = require("./Privilege/queries");
 const GQLMutations_User = require("./User/mutations");
@@ -20,14 +22,16 @@ const GQLSchema = new GraphQLSchema({
             ...GQLQueries_UserStatus,
             ...GQLQueries_UserRole,
             ...GQLQueries_User,
-            ...GQLQueries_CustomerStatus
+            ...GQLQueries_CustomerStatus,
+            ...GQLQueries_Customer
         })
     }),
     mutation: new GraphQLObjectType({
         name: 'Mutation',
         fields: () => ({
             ...GQLMutations_UserRole,
-            ...GQLMutations_User
+            ...GQLMutations_User,
+            ...GQLMutations_Customer
         })
     })
 })
