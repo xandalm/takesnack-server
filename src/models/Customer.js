@@ -110,7 +110,6 @@ class Customer extends Model {
             phoneNumber: obj[`${Customer._tablename_}_phoneNumber`],
             name: obj[`${Customer._tablename_}_name`],
             pwd: obj[`${Customer._tablename_}_pwd`],
-            role: obj.role,
             status: obj.status,
             createdAt: obj[`${Customer._tablename_}_createdAt`],
             updatedAt: obj[`${Customer._tablename_}_updatedAt`],
@@ -239,7 +238,6 @@ class Customer extends Model {
                         .update({
                             name: this.name,
                             pwd: this.pwd,
-                            role: null,
                             status: this.status.id,
                             updatedAt: this.updatedAt,
                             deletedAt: this.deletedAt
@@ -287,7 +285,6 @@ class Customer extends Model {
                         phoneNumber: this.phoneNumber,
                         name: this.name,
                         pwd: this.pwd,
-                        role: this.role ? this.role.id : null,
                         status: this.status ? this.status.id : null,
                         updatedAt: this.updatedAt
                     })
