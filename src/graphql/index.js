@@ -4,6 +4,8 @@ const GQLMutations_Customer = require("./Customer/mutations");
 const GQLQueries_Customer = require("./Customer/queries");
 const GQLQueries_CustomerStatus = require("./CustomerStatus/queries");
 const GQLQueries_Privilege = require("./Privilege/queries");
+const GQLMutations_Product = require("./Product/mutations");
+const GQLQueries_Product = require("./Product/queries");
 const GQLMutations_ProductCategory = require("./ProductCategory/mutations");
 const GQLQueries_ProductCategory = require("./ProductCategory/queries");
 const GQLQueries_ProductStatus = require("./ProductStatus/queries");
@@ -28,7 +30,8 @@ const GQLSchema = new GraphQLSchema({
             ...GQLQueries_CustomerStatus,
             ...GQLQueries_Customer,
             ...GQLQueries_ProductStatus,
-            ...GQLQueries_ProductCategory
+            ...GQLQueries_ProductCategory,
+            ...GQLQueries_Product
         })
     }),
     mutation: new GraphQLObjectType({
@@ -37,7 +40,8 @@ const GQLSchema = new GraphQLSchema({
             ...GQLMutations_UserRole,
             ...GQLMutations_User,
             ...GQLMutations_Customer,
-            ...GQLMutations_ProductCategory
+            ...GQLMutations_ProductCategory,
+            ...GQLMutations_Product
         })
     })
 })
