@@ -8,7 +8,7 @@ exports.up = function(knex) {
     table.string('name', 40).unique().notNullable();
     table.string('description', 100);
     table.decimal('price', 2);
-    table.integer('category').notNullable();
+    table.integer('category');
     table.integer('status').notNullable();
     table.dateTime('createdAt').notNullable();
     table.dateTime('updatedAt');
