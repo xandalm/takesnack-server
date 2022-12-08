@@ -233,6 +233,48 @@ class User extends Model {
         return res;
     }
 
+    static async withCredentials(phoneNumber, pwd) {
+        var res;
+        if(typeof(phoneNumber) !== 'string')
+            throw new TypeError("Phone number must be string");
+        if(typeof(pwd) !== 'string')
+            throw new TypeError("Password(pwd) must be string");
+        if(!/^[\x21-\x7E]*$/.test(pwd))
+            throw new CustomError("Invalid credentials");
+        pwd = createHmac('sha256', '@TakeSnack#UserSecret').update(pwd).digest('hex');
+        try {
+            var data = await connection.with('A', (c) => {
+                c.select(User.fieldRewriter.transform.all())
+                .from(User._tablename_)
+                .where({ phoneNumber, pwd })
+            })
+            .select(
+                this.fieldRewriter.alias.all().concat(
+                    UserRole.fieldRewriter.transform.all(),
+                    UserStatus.fieldRewriter.transform.all()
+                )
+            )
+            .from('A')
+            .leftJoin(UserRole._tablename_, this.fieldRewriter.aliases.role, UserRole.fieldRewriter.absolutes.id)
+            .join(UserStatus._tablename_, this.fieldRewriter.aliases.status, UserStatus.fieldRewriter.absolutes.id)
+            .first();
+            if(!data)
+                throw new CustomError("Invalid credentials");
+            res = (new User)._fromDB({
+                ...data,
+                role: (new UserRole)._fromDB(data),
+                status: (new UserStatus)._fromDB(data)
+            });
+        } catch(err) {
+            if(isDevelopment) console.log(err);
+            if(err instanceof SqliteError)
+                throw new CustomError("Internal server error");
+            else
+                throw err;
+        }
+        return res;
+    }
+
     isValid() {
         if(!this.phoneNumber)
             throw new CustomError("Phone number is required");
