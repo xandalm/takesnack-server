@@ -508,7 +508,7 @@ class ProductIngredient extends Model {
     }
 
     async insert() {
-        var res;
+        var res = false;
         this.isValid();
         try {
             var [found] = await connection(ProductIngredient._tablename_)
@@ -539,7 +539,7 @@ class ProductIngredient extends Model {
                         quantity: this.quantity,
                         createdAt: this.createdAt
                     });
-                res = this;
+                res = true;
             }
         } catch (err) {
             if(isDevelopment)
@@ -552,14 +552,14 @@ class ProductIngredient extends Model {
     }
 
     async update() {
-        var res;
+        var res = false;
         this.isValid();
         try {
             var [found] = await connection(ProductIngredient._tablename_)
                 .select('*')
                 .where({ product: this.product.id, ingredient: this.ingredient.id, deletedAt: null });
-            if(found) {
-                throw new CustomError("Ingredient already included");
+            if(!found) {
+                throw new CustomError("Product ingredient not exist");
             } else {
                 this.#props.updatedAt = new Date;
                 await connection(ProductIngredient._tablename_)
@@ -569,7 +569,7 @@ class ProductIngredient extends Model {
                         quantity: this.quantity,
                         updatedAt: this.updatedAt
                     });
-                res = this;
+                res = true;
             }
         } catch (err) {
             if(isDevelopment)
