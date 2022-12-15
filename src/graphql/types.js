@@ -67,8 +67,8 @@ const GQLScalar_Hybrid = new GraphQLScalarType({
     }
 })
 
-const GQLEnum_Order = new GraphQLEnumType({
-    name: 'Order',
+const GQLEnum_SortOrder = new GraphQLEnumType({
+    name: 'SortOrder',
     values: {
         ASC: { value: 'ASC' },
         DESC: { value: 'DESC' }
@@ -80,8 +80,8 @@ const GQLInput_OrderBy = new GraphQLInputObjectType({
     fields: () => ({
         field: { type: GraphQLString },
         order: {
-            type: GQLEnum_Order,
-            defaultValue: GQLEnum_Order.getValue('ASC')
+            type: GQLEnum_SortOrder,
+            defaultValue: GQLEnum_SortOrder.getValue('ASC')
         }
     })
 });
