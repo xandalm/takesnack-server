@@ -8,7 +8,7 @@ exports.up = function(knex) {
             "CREATE TRIGGER `tg_update_order--total_new-item` AFTER INSERT ON OrderItem "+
             "FOR EACH ROW "+
             "BEGIN "+
-            "UPDATE `Order` SET `total` = `total` + (NEW.`price` * NEW.`quantity`) WHERE `id` = NEW.`order`; "+
+            "UPDATE `Order` SET `updatedAt` = NEW.`createdAt`, `total` = `total` + (NEW.`price` * NEW.`quantity`) WHERE `id` = NEW.`order`; "+
             "END"
         ),
         knex.raw(
@@ -16,7 +16,7 @@ exports.up = function(knex) {
             "FOR EACH ROW "+
             "WHEN OLD.`deletedAt` IS NULL AND NEW.`deletedAt` IS NULL "+
             "BEGIN "+
-            "UPDATE `Order` SET `total` = `total` - (OLD.`price` * OLD.`quantity`) + (NEW.`price` * NEW.`quantity`) WHERE `id` = NEW.`order` AND NEW.`order` = OLD.`order`; "+
+            "UPDATE `Order` SET `updatedAt` = NEW.`updatedAt`, `total` = `total` - (OLD.`price` * OLD.`quantity`) + (NEW.`price` * NEW.`quantity`) WHERE `id` = NEW.`order` AND NEW.`order` = OLD.`order`; "+
             "END"
         ),
         knex.raw(
@@ -24,7 +24,7 @@ exports.up = function(knex) {
             "FOR EACH ROW "+
             "WHEN OLD.`deletedAt` IS NOT NULL AND NEW.`deletedAt` IS NULL "+
             "BEGIN "+
-            "UPDATE `Order` SET `total` = `total` + (NEW.`price` * NEW.`quantity`) WHERE `id` = NEW.`order` AND NEW.`order` = OLD.`order`; "+
+            "UPDATE `Order` SET `updatedAt` = NEW.`createdAt`, `total` = `total` + (NEW.`price` * NEW.`quantity`) WHERE `id` = NEW.`order` AND NEW.`order` = OLD.`order`; "+
             "END"
         ),
         knex.raw(
@@ -32,7 +32,7 @@ exports.up = function(knex) {
             "FOR EACH ROW "+
             "WHEN OLD.`deletedAt` IS NULL AND NEW.`deletedAt` IS NOT NULL "+
             "BEGIN "+
-            "UPDATE `Order` SET `total` = `total` - (OLD.`price` * OLD.`quantity`) WHERE `id` = OLD.`order` AND NEW.`order` = OLD.`order`; "+
+            "UPDATE `Order` SET `updatedAt` = NEW.`deletedAt`, `total` = `total` - (OLD.`price` * OLD.`quantity`) WHERE `id` = OLD.`order` AND NEW.`order` = OLD.`order`; "+
             "END"
         ),
         knex.raw(
