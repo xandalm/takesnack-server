@@ -330,6 +330,7 @@ class User extends Model {
                     throw new CustomError("Phone number already in use");
                 else {
                     this.#props.id = found.id;
+                    this.#props.createdAt = new Date(found.createdAt);
                     this.#props.updatedAt = new Date;
                     this.#props.role = User.hasAdmin ? null : UserRole.roles.find(r => r.id === 1);
                     await connection(User._tablename_)
@@ -392,7 +393,7 @@ class User extends Model {
                     })
                     .where({ id: this.id });
                 res = true;
-                User.hasAdmin = await User.getAll(Condition.from({ condition: { field: 'role', operator: '==', value: 1 } })).length > 0;
+                User.hasAdmin = await User.checkAdminExistence();
             }
         } catch (err) {
             if(isDevelopment) console.log(err);
@@ -414,7 +415,7 @@ class User extends Model {
             if(data !== 1)
                 throw new CustomError("User not exist");
             res = true;
-            User.hasAdmin = await User.getAll(Condition.from({ condition: { field: 'role', operator: '==', value: 1 } })).length > 0;
+            User.hasAdmin = await User.checkAdminExistence();
         } catch (err) {
             if(isDevelopment) console.log(err);
             if(err instanceof SqliteError)

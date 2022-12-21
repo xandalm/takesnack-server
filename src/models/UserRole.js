@@ -210,6 +210,7 @@ class UserRole extends Model {
                     throw new CustomError("User role name already in use");
                 else {
                     this.#props.id = found.id;
+                    this.#props.createdAt = new Date(found.createdAt);
                     this.#props.updatedAt = new Date;
                     await connection(UserRole._tablename_)
                         .update({
@@ -441,9 +442,19 @@ class UserRoleGrant extends Model {
         try {
             var [found] = await connection(UserRoleGrant._tablename_)
                 .select('*')
-                .where({ role: this.role.id, privilege: this.privilege.id, deletedAt: null });
+                .where({ role: this.role.id, privilege: this.privilege.id });
             if(found) {
-                throw new CustomError("Privilege already granted");
+                if(found.deleteAt == null)
+                    throw new CustomError("Privilege already granted");
+                else {
+                    this.#props.createdAt = new Date;
+                    await connection(UserRoleGrant._tablename_)
+                        .update({
+                            createdAt: this.createdAt,
+                            updatedAt: this.updatedAt,
+                            deletedAt: this.deletedAt
+                        });
+                }
             } else {
                 this.#props.createdAt = new Date;
                 await connection(UserRoleGrant._tablename_)
@@ -452,9 +463,9 @@ class UserRoleGrant extends Model {
                         privilege: this.privilege.id,
                         createdAt: this.createdAt
                     });
-                res = true;
-                UserRole.load(this.role.id);
             }
+            res = true;
+            UserRole.load(this.role.id);
         } catch (err) {
             if(isDevelopment)
             if(err instanceof SqliteError)

@@ -272,6 +272,7 @@ class Customer extends Model {
                     throw new CustomError("Phone number already in use");
                 else {
                     this.#props.id = found.id;
+                    this.#props.createdAt = new Date(found.createdAt);
                     this.#props.updatedAt = new Date;
                     await connection(Customer._tablename_)
                         .update({

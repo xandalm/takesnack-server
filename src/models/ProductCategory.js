@@ -171,6 +171,7 @@ class ProductCategory extends Model {
                     throw new CustomError("Product category name already in use");
                 else {
                     this.#props.id = found.id;
+                    this.#props.createdAt = new Date(found.createdAt);
                     this.#props.updatedAt = new Date;
                     await connection(ProductCategory._tablename_)
                         .update({

@@ -171,6 +171,7 @@ class Ingredient extends Model {
                     throw new CustomError("Ingredient name already in use");
                 else {
                     this.#props.id = found.id;
+                    this.#props.createdAt = new Date(found.createdAt);
                     this.#props.updatedAt = new Date;
                     await connection(Ingredient._tablename_)
                         .update({

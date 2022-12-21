@@ -255,6 +255,7 @@ class Product extends Model {
                     throw new CustomError("Name already in use");
                 else {
                     this.#props.id = found.id;
+                    this.#props.createdAt = new Date(found.createdAt);
                     this.#props.updatedAt = new Date;
                     await connection(Product._tablename_)
                         .update({
@@ -520,9 +521,8 @@ class ProductIngredient extends Model {
                 if(found.deletedAt == null)
                     throw new CustomError("Ingredient already included");
                 else {
-                    this.#props.createdAt = found.createdAt;
+                    this.#props.createdAt = new Date(found.createdAt);
                     this.#props.updatedAt = new Date;
-                    this.#props.deletedAt = null;
                     await connection(ProductIngredient._tablename_)
                         .update({
                             quantity: this.quantity,

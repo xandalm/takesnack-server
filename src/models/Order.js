@@ -516,7 +516,7 @@ class OrderItem extends Model {
             const transaction = await connection.transaction();
             var [found] = await transaction(Order._tablename_)
                 .select(Order.fieldRewriter.absolutes.status)
-                .where({ id: this.#props.order.id });
+                .where({ id: this.#props.order.id, deletedAt: null });
             if(!found)
                 throw new CustomError("The order doesn't exist");
             else if(found.status !== OrderStatus.IN_QUEUE)
@@ -526,7 +526,8 @@ class OrderItem extends Model {
                 .where({ order: this.#props.order.id, product: this.#props.product.id });
             try {
                 if(!found) {
-                    this.#props.createdAt = new Date;
+                    this.#props.createdAt = new Date(found.createdAt);
+                    this.#props.updatedAt = new Date;
                     this.#props.price = this.#props.product.price;
                     await transaction(OrderItem._tablename_)
                         .insert({
@@ -541,8 +542,6 @@ class OrderItem extends Model {
                     throw new CustomError("Product already included");
                 } else {
                     this.#props.createdAt = new Date;
-                    this.#props.updatedAt = null;
-                    this.#props.deletedAt = null;
                     this.#props.price = this.#props.product.price;
                     await transaction(OrderItem._tablename_)
                         .update({
