@@ -8,6 +8,8 @@ exports.up = function(knex) {
     table.integer('privilege').notNullable();
     table.dateTime('createdAt').notNullable();
     table.dateTime('deletedAt');
+    table.foreign('role').references('UserRole.id').withKeyName('fk_user-grant_user-role');
+    table.foreign('privilege').references('Privilege.id').withKeyName('fk_user-grant_privilege');
   }).then(async () => {
     let privileges = await knex.select('id').from('Privilege');
     let toInsert = [];
