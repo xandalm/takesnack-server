@@ -7,19 +7,15 @@ const { Condition } = require("../utils/condition");
 const CustomError = require("../utils/errors");
 const { JWT } = require("../utils/jwt");
 const { OrderBy } = require("../utils/order");
+const Controller = require("./Controller");
 
-class CustomerControllerClass {
+class CustomerControllerClass extends Controller {
 
     async createCustomer(accessToken, input) {
-        if(!User.hasAdmin)
-            throw new CustomError("Uninitialized application");
-        if(accessToken && !(accessToken instanceof JWT))
-            throw new TypeError("Access token must be JWT type");
-        if(
-            !accessToken?.check() || 
-            !UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.WRITE_CUSTOMER)
-        )
-            throw new CustomError("Unauthorized - missing valid access token");
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_CUSTOMER);
         var response;
         try {
             const props = Object.assign({}, input);
@@ -36,16 +32,12 @@ class CustomerControllerClass {
     }
 
     async updateCustomer(accessToken, input) {
-        if(!User.hasAdmin)
-            throw new CustomError("Uninitialized application");
-        if(accessToken && !(accessToken instanceof JWT))
-            throw new TypeError("Access token must be JWT type");
-        if(!accessToken?.check())
-            throw new CustomError("Unauthorized - missing valid access token");
-        if(accessToken.payload.roles !== 'customer') {
-            if(!UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.WRITE_CUSTOMER))
-                throw new CustomError("Unauthorized - missing valid access token");
-        } else if(accessToken.payload.sub && accessToken.payload.sub !== input?.id)
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        if(accessToken.payload.roles)
+            this.assertPrivilegeGranted(accessToken, Privilege.WRITE_CUSTOMER);
+        else if(accessToken.payload.sub && accessToken.payload.sub !== input?.id)
             throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
@@ -73,16 +65,12 @@ class CustomerControllerClass {
     }
 
     async deleteCustomer(accessToken, id) {
-        if(!User.hasAdmin)
-            throw new CustomError("Uninitialized application");
-        if(accessToken && !(accessToken instanceof JWT))
-            throw new TypeError("Access token must be JWT type");
-        if(!accessToken?.check())
-            throw new CustomError("Unauthorized - missing valid access token");
-        if(accessToken.payload.roles !== 'customer') {
-            if(!UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.WRITE_CUSTOMER))
-                throw new CustomError("Unauthorized - missing valid access token");
-        } else if(accessToken.payload.sub && accessToken.payload.sub !== input?.id)
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        if(accessToken.payload.roles)
+            this.assertPrivilegeGranted(accessToken, Privilege.WRITE_CUSTOMER);
+        else if(accessToken.payload.sub && accessToken.payload.sub !== input?.id)
             throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
@@ -101,12 +89,9 @@ class CustomerControllerClass {
     }
 
     async getCustomer(accessToken, id) {
-        if(!User.hasAdmin)
-            throw new CustomError("Uninitialized application");
-        if(accessToken && !(accessToken instanceof JWT))
-            throw new TypeError("Access token must be JWT type");
-        if(!accessToken?.check())
-            throw new CustomError("Unauthorized - missing valid access token");
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
         var response;
         try {
             response = await Customer.get(id);
@@ -120,15 +105,10 @@ class CustomerControllerClass {
     }
 
     async getAllCustomers(accessToken, { page, limit, where, orderBy }) {
-        if(!User.hasAdmin)
-            throw new CustomError("Uninitialized application");
-        if(accessToken && !(accessToken instanceof JWT))
-            throw new TypeError("Access token must be JWT type");
-        if(
-            !accessToken?.check() ||
-            !UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.READ_CUSTOMER)
-        )
-            throw new CustomError("Unauthorized - missing valid access token");
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.READ_CUSTOMER);
         var response;
         try {
             const condition = Condition.from(where);
@@ -148,8 +128,7 @@ class CustomerControllerClass {
     }
 
     async fromCredentials(phoneNumber, pwd) {
-        if(!User.hasAdmin)
-            throw new CustomError("Uninitialized application");
+        this.assertInitializedApp();
         try {
             phoneNumber = phoneNumber?.trim?.();
             pwd = pwd?.trim?.();
