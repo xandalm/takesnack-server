@@ -26,7 +26,7 @@ app.use(
                     try {
                         var [_, jwt] = req.headers.authorization.split(' ');
                         jwt = JWT.from(jwt);
-                        if(/^Bearer$/.test(_) && jwt.check())
+                        if(/^Bearer$/.test(_) && jwt instanceof JWT)
                             return jwt;
                     } catch(err) {
                         if(isDevelopment) console.log(err);

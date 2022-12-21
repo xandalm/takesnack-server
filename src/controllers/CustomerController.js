@@ -13,8 +13,10 @@ class CustomerControllerClass {
     async createCustomer(accessToken, input) {
         if(!User.hasAdmin)
             throw new CustomError("Uninitialized application");
+        if(accessToken && !(accessToken instanceof JWT))
+            throw new TypeError("Access token must be JWT type");
         if(
-            !accessToken || 
+            !accessToken?.check() || 
             !UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.WRITE_CUSTOMER)
         )
             throw new CustomError("Unauthorized - missing valid access token");
@@ -36,7 +38,9 @@ class CustomerControllerClass {
     async updateCustomer(accessToken, input) {
         if(!User.hasAdmin)
             throw new CustomError("Uninitialized application");
-        if(!accessToken)
+        if(accessToken && !(accessToken instanceof JWT))
+            throw new TypeError("Access token must be JWT type");
+        if(!accessToken?.check())
             throw new CustomError("Unauthorized - missing valid access token");
         if(accessToken.payload.roles !== 'customer') {
             if(!UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.WRITE_CUSTOMER))
@@ -71,7 +75,9 @@ class CustomerControllerClass {
     async deleteCustomer(accessToken, id) {
         if(!User.hasAdmin)
             throw new CustomError("Uninitialized application");
-        if(!accessToken)
+        if(accessToken && !(accessToken instanceof JWT))
+            throw new TypeError("Access token must be JWT type");
+        if(!accessToken?.check())
             throw new CustomError("Unauthorized - missing valid access token");
         if(accessToken.payload.roles !== 'customer') {
             if(!UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.WRITE_CUSTOMER))
@@ -97,7 +103,9 @@ class CustomerControllerClass {
     async getCustomer(accessToken, id) {
         if(!User.hasAdmin)
             throw new CustomError("Uninitialized application");
-        if(!accessToken)
+        if(accessToken && !(accessToken instanceof JWT))
+            throw new TypeError("Access token must be JWT type");
+        if(!accessToken?.check())
             throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
@@ -114,8 +122,10 @@ class CustomerControllerClass {
     async getAllCustomers(accessToken, { page, limit, where, orderBy }) {
         if(!User.hasAdmin)
             throw new CustomError("Uninitialized application");
+        if(accessToken && !(accessToken instanceof JWT))
+            throw new TypeError("Access token must be JWT type");
         if(
-            !accessToken ||
+            !accessToken?.check() ||
             !UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.READ_CUSTOMER)
         )
             throw new CustomError("Unauthorized - missing valid access token");
