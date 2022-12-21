@@ -8,11 +8,12 @@ const Model = require("./model");
 const { UserRole } = require('./UserRole');
 const { UserStatus } = require('./UserStatus');
 const { SqliteError } = require("better-sqlite3");
+const { Condition } = require('../utils/condition');
 
 class User extends Model {
 
     static _tablename_ = 'User';
-    static _filterable_ = [ 'id', 'phoneNumber', 'name' ];
+    static _filterable_ = [ 'id', 'phoneNumber', 'name', 'role', 'createdAt', 'updatedAt', 'deletedAt' ];
     static _sortable_ = [ 'name', 'createdAt', 'updatedAt', 'deletedAt' ];
 
     static fieldRewriter = new FieldRewriter();
@@ -27,6 +28,37 @@ class User extends Model {
         this.fieldRewriter.add('createdAt', `${this._tablename_}.createdAt`, `${this._tablename_}_createdAt`);
         this.fieldRewriter.add('updatedAt', `${this._tablename_}.updatedAt`, `${this._tablename_}_updatedAt`);
         this.fieldRewriter.add('deletedAt', `${this._tablename_}.deletedAt`, `${this._tablename_}_deletedAt`);
+    }
+
+    static hasAdmin;
+
+    static checkAdminExistence = async () => {
+        const condition = Condition.from({
+            grouping: [
+                {
+                    condition: {
+                        field: 'deletedAt',
+                        operator: '==',
+                        value: null
+                    }
+                },
+                {
+                    condition: {
+                        field: 'role',
+                        operator: '==',
+                        value: 1
+                    }
+                }
+            ],
+            operator: "and"
+        });
+        const res = await this.getAll({ condition })
+        return res.length > 0;
+    }
+
+    static {
+        this.checkAdminExistence()
+        .then(has => this.hasAdmin = has);
     }
 
     #props={
@@ -299,32 +331,35 @@ class User extends Model {
                 else {
                     this.#props.id = found.id;
                     this.#props.updatedAt = new Date;
+                    this.#props.role = User.hasAdmin ? null : UserRole.roles.find(r => r.id === 1);
                     await connection(User._tablename_)
                         .update({
                             name: this.name,
                             pwd: this.pwd,
-                            role: null,
+                            role:  this.role ? this.role.id : null,
                             status: this.status.id,
                             updatedAt: this.updatedAt,
                             deletedAt: this.deletedAt
                         })
                         .where({ id: this.id });
-                    res = true;
                 }
             } else {
                 this.#props.id = uuid();
                 this.#props.createdAt = new Date;
+                this.#props.role = User.hasAdmin ? null : UserRole.roles.find(r => r.id === 1);
                 await connection(User._tablename_)
                     .insert({
                         id: this.id,
                         phoneNumber: this.phoneNumber,
                         name: this.name,
                         pwd: this.pwd,
+                        role:  this.role ? this.role.id : null,
                         status: this.status.id,
                         createdAt: this.createdAt
                     });
-                res = true;
             }
+            res = true;
+            User.hasAdmin = true; // TRUST
         } catch (err) {
             if(isDevelopment) console.log(err);
             if(err instanceof SqliteError)
@@ -357,6 +392,7 @@ class User extends Model {
                     })
                     .where({ id: this.id });
                 res = true;
+                User.hasAdmin = await User.getAll(Condition.from({ condition: { field: 'role', operator: '==', value: 1 } })).length > 0;
             }
         } catch (err) {
             if(isDevelopment) console.log(err);
@@ -376,6 +412,7 @@ class User extends Model {
                 .update({ deletedAt: this.deletedAt })
                 .where({ id: this.id, deletedAt: null });
             res = true;
+            User.hasAdmin = await User.getAll(Condition.from({ condition: { field: 'role', operator: '==', value: 1 } })).length > 0;
         } catch (err) {
             if(isDevelopment) console.log(err);
             if(err instanceof SqliteError)
