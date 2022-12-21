@@ -11,7 +11,7 @@ const { SqliteError } = require("better-sqlite3");
 class UserRole extends Model {
 
     static _tablename_ = 'UserRole';
-    static _filterable_ = [ 'id', 'name', 'description' ];
+    static _filterable_ = [ 'id', 'name', 'description', 'createdAt', 'updatedAt', 'deletedAt' ];
     static _sortable_ = [ 'name', 'description', 'createdAt', 'updatedAt', 'deletedAt' ];
 
     static fieldRewriter = new FieldRewriter();
@@ -23,6 +23,34 @@ class UserRole extends Model {
         this.fieldRewriter.add('createdAt', `${this._tablename_}.createdAt`, `${this._tablename_}_createdAt`);
         this.fieldRewriter.add('updatedAt', `${this._tablename_}.updatedAt`, `${this._tablename_}_updatedAt`);
         this.fieldRewriter.add('deletedAt', `${this._tablename_}.deletedAt`, `${this._tablename_}_deletedAt`);
+    }
+
+    static roles = {};
+
+    static async load(id) {
+        if(!this.roles.find)
+            this.roles.find = (fn) => Object.values(this.roles).filter(r => r.id).find(fn);
+        if(!id) {
+            const roles = await this.getAll();
+            for (const role of roles) {
+                await role.grants;
+                this.roles[role.id] = role;
+            }
+        } else {
+            const role = await this.get(id);
+            await role.grants;
+            this.roles[role.id] = role;
+        }
+    }
+
+    static async delete(id) {
+        try {
+            delete this.roles[id];
+        } catch(err) {}
+    }
+
+    static {
+        this.load();
     }
 
     #props = {
@@ -71,6 +99,8 @@ class UserRole extends Model {
     get name() { return this.#props.name; }
     get description() { return this.#props.description; }
     get grants() {
+        if(this.#props.grants != null)
+            return this.#props.grants;
         return (async (role) => {
             role.#props.grants = await UserRoleGrant.getRolePrivileges(role.id)
             return role.#props.grants;
@@ -189,7 +219,6 @@ class UserRole extends Model {
                             deletedAt: this.deletedAt
                         })
                         .where({ id: this.id });
-                    res = true;
                 }
             } else {
                 this.#props.createdAt = new Date;
@@ -201,8 +230,9 @@ class UserRole extends Model {
                     })
                     .returning('id');
                 this.#props.id = data.id;
-                res = true;
             }
+            res = true;
+            UserRole.load(this.id);
         } catch (err) {
             if(isDevelopment) console.log(err);
             if(err instanceof SqliteError)
@@ -234,6 +264,7 @@ class UserRole extends Model {
                     })
                     .where({ id: this.id });
                 res = true;
+                UserRole.load(this.id);
             }
         } catch (err) {
             if(isDevelopment) console.log(err);
@@ -255,6 +286,7 @@ class UserRole extends Model {
                 .update({ deletedAt: this.deletedAt })
                 .where({ id: this.id, deletedAt: null });
             res = true;
+            UserRole.delete(this.id);
         } catch (err) {
             if(isDevelopment) console.log(err);
             if(err instanceof SqliteError)
@@ -345,18 +377,13 @@ class UserRoleGrant extends Model {
         try {
             const role = await UserRole.get(roleId);
             var data = await connection(this._tablename_)
-                .innerJoin(
-                    Privilege._tablename_,
-                    UserRoleGrant.fieldRewriter.absolutes.privilege,
-                    Privilege.fieldRewriter.absolutes.id
-                )
                 .where({ role: role.id })
                 .andWhere(this.fieldRewriter.absolutes.deletedAt, null)
-                .select(UserRoleGrant.fieldRewriter.transform.all().concat(Privilege.fieldRewriter.transform.all()));
+                .select(UserRoleGrant.fieldRewriter.transform.all());
             res = Array.from(data).map(e => (new UserRoleGrant)._fromDB({
                 ...e,
                 role,
-                privilege: (new Privilege)._fromDB(e)
+                privilege: Privilege.privileges[e[UserRoleGrant.fieldRewriter.aliases.privilege]]
             }));
         } catch(err) {
             if(isDevelopment) console.log(err);
@@ -377,12 +404,9 @@ class UserRoleGrant extends Model {
                     UserRoleGrant.fieldRewriter.absolutes.role,
                     UserRole.fieldRewriter.absolutes.id
                 )
-                .join(
-                    Privilege._tablename_,
-                    UserRoleGrant.fieldRewriter.absolutes.privilege,
-                    Privilege.fieldRewriter.absolutes.id
-                )
-                .select(UserRoleGrant.fieldRewriter.transform.select(['createdAt', 'deletedAt']).concat(UserRole.fieldRewriter.transform.all().concat(Privilege.fieldRewriter.transform.all())))
+                .select(UserRoleGrant.fieldRewriter.transform.select(['createdAt', 'deletedAt']).concat(
+                    UserRole.fieldRewriter.transform.all()
+                ))
                 .where(UserRoleGrant.fieldRewriter.absolutes.role, roleId)
                 .andWhere(UserRoleGrant.fieldRewriter.absolutes.privilege, privilegeId)
                 .first();
@@ -390,7 +414,7 @@ class UserRoleGrant extends Model {
                 res = (new UserRoleGrant)._fromDB({
                     ...data,
                     role: (new UserRole)._fromDB(data),
-                    privilege: (new Privilege)._fromDB(data)
+                    privilege: await Privilege.privileges[data[UserRoleGrant.fieldRewriter.aliases.privilege]]
                 });
         } catch(err) {
             if(isDevelopment) console.log(err);
@@ -427,6 +451,7 @@ class UserRoleGrant extends Model {
                         createdAt: this.createdAt
                     });
                 res = true;
+                UserRole.load(this.role.id);
             }
         } catch (err) {
             if(isDevelopment)
@@ -449,6 +474,7 @@ class UserRoleGrant extends Model {
                 .update({ deletedAt: this.deletedAt })
                 .where({ role: this.role.id, privilege: this.privilege.id, deletedAt: null });
             res = true;
+            UserRole.load(this.role.id);
         } catch (err) {
             if(isDevelopment) console.log(err);
             if(err instanceof SqliteError)

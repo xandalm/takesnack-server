@@ -7,8 +7,29 @@ const { SqliteError } = require("better-sqlite3");
 
 class Privilege extends Model {
 
+    static READ_PRIVILEGE = 1;
+    static READ_USER_ROLE = 2;
+    static WRITE_USER_ROLE = 3;
+    static READ_USER_STATUS = 4;
+    static READ_USER = 5;
+    static WRITE_USER = 6;
+    static READ_CUSTOMER_STATUS = 7;
+    static READ_CUSTOMER = 8;
+    static WRITE_CUSTOMER = 9;
+    static READ_INGREDIENT = 10;
+    static WRITE_INGREDIENT = 11;
+    static READ_PRODUCT_STATUS = 12;
+    static READ_PRODUCT_CATEGORY = 13;
+    static WRITE_PRODUCT_CATEGORY = 14;
+    static READ_PRODUCT = 15;
+    static WRITE_PRODUCT = 16;
+    static READ_DELIVERY_TYPE = 17;
+    static READ_ORDER_STATUS = 18;
+    static READ_ORDER = 19;
+    static WRITE_ORDER = 20;
+
     static _tablename_ = 'Privilege';
-    static _filterable_ = [ 'id', 'name', 'description' ];
+    static _filterable_ = [ 'id', 'name', 'description', ];
     static _sortable_ = [ 'name', 'description', 'createdAt' ];
 
     static fieldRewriter = new FieldRewriter();
@@ -18,8 +39,21 @@ class Privilege extends Model {
         this.fieldRewriter.add('name', `${this._tablename_}.name`, `${this._tablename_}_name`);
         this.fieldRewriter.add('description', `${this._tablename_}.description`, `${this._tablename_}_description`);
         this.fieldRewriter.add('createdAt', `${this._tablename_}.createdAt`, `${this._tablename_}_createdAt`);
-        this.fieldRewriter.add('updatedAt', `${this._tablename_}.updatedAt`, `${this._tablename_}_updatedAt`);
-        this.fieldRewriter.add('deletedAt', `${this._tablename_}.deletedAt`, `${this._tablename_}_deletedAt`);
+    }
+
+    static privileges = {};
+
+    static async load() {
+        if(!this.privileges.find)
+            this.privileges.find = (fn) => Object.values(this.privileges).filter(r => r.id).find(fn);
+        const privileges = await this.getAll();
+        for (const privilege of privileges) {
+            this.privileges[privilege.id] = privilege;
+        }
+    }
+
+    static {
+        this.load();
     }
 
     #props = {
