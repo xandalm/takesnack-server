@@ -26,16 +26,16 @@ class Model {
      */
     static _getConditionStatement(condition) {
         var { field, operator, value} = condition;
-        if(['createdAt','updatedAt','deletedAt'].includes(field) && (!(value instanceof Date) || value === 'Invalid Date')) {
+        if((/^(null|undefined)$/i).test(value))
+            value = null;
+        else if((/^({null}|{undefined})$/i).test(value))
+            value = value.substring(1,value.length-1);
+        if(['createdAt','updatedAt','deletedAt'].includes(field) && (value != undefined && (!(value instanceof Date) || value === 'Invalid Date'))) {
             throw new TypeError(`Invalid '${value}' value to '${field}' field.`);
         }
         // because sqlite driver convert datetime to integer representation
         if(value instanceof Date)
             value = value.getTime();
-        if((/^(null|undefined)$/i).test(value))
-            value = null;
-        else if((/^({null}|{undefined})$/i).test(value))
-            value = value.substring(1,value.length-1);
         if(operator instanceof RelationalOperatorEqual) {
             if(value == null)
                 operator = ' IS ';
