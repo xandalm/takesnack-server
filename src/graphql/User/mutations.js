@@ -1,4 +1,4 @@
-const { GraphQLNonNull, GraphQLString } = require("graphql");
+const { GraphQLNonNull, GraphQLString, Token } = require("graphql");
 const UserController = require("../../controllers/UserController");
 const { GQLObject_User, GQLInput_User } = require("./types");
 
@@ -8,8 +8,8 @@ const GQLMutations_User = {
         args: {
             input: { type: new GraphQLNonNull(GQLInput_User) }
         },
-        resolve: (_, { input }) => {
-            return UserController.createUser(input);
+        resolve: (_, { input }, { token }) => {
+            return UserController.createUser(token, input);
         }
     },
     updateUser: {
@@ -17,8 +17,8 @@ const GQLMutations_User = {
         args: {
             input: { type: new GraphQLNonNull(GQLInput_User) }
         },
-        resolve: (_, { input }) => {
-            return UserController.updateUser(input);
+        resolve: (_, { input }, { token }) => {
+            return UserController.updateUser(token, input);
         }
     },
     deleteUser: {
@@ -26,8 +26,8 @@ const GQLMutations_User = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) }
         },
-        resolve: (_, { id }) => {
-            return UserController.deleteUser(id);
+        resolve: (_, { id }, { token }) => {
+            return UserController.deleteUser(token, id);
         }
     }
 }

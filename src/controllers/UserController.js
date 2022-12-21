@@ -1,13 +1,23 @@
+const { Privilege } = require("../models/Privilege");
 const { User } = require("../models/User");
 const { UserRole } = require("../models/UserRole");
 const { UserStatus } = require("../models/UserStatus");
 const { Condition } = require("../utils/condition");
 const CustomError = require("../utils/errors");
+const { JWT } = require("../utils/jwt");
 const { OrderBy } = require("../utils/order");
 
 class UserControllerClass {
 
-    async createUser(input) {
+    async createUser(accessToken, input) {
+        if(
+            User.hasAdmin && 
+            (
+                !accessToken || 
+                !UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.WRITE_USER)
+            )
+        )
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
             const props = Object.assign({}, input);
@@ -23,7 +33,14 @@ class UserControllerClass {
         return response;
     }
 
-    async updateUser(input) {
+    async updateUser(accessToken, input) {
+        if(!User.hasAdmin)
+            throw new CustomError("Uninitialized application");
+        if(
+            !accessToken || 
+            !UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.WRITE_USER)
+        )
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
             const props = Object.assign({}, input);
@@ -51,7 +68,14 @@ class UserControllerClass {
         return response;
     }
 
-    async deleteUser(id) {
+    async deleteUser(accessToken, id) {
+        if(!User.hasAdmin)
+            throw new CustomError("Uninitialized application");
+        if(
+            !accessToken || 
+            !UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.WRITE_USER)
+        )
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
             const user = await User.get(id);
@@ -68,7 +92,14 @@ class UserControllerClass {
         return response;
     }
 
-    async getUser(id) {
+    async getUser(accessToken, id) {
+        if(!User.hasAdmin)
+            throw new CustomError("Uninitialized application");
+        if(
+            !accessToken ||
+            !UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.READ_USER)
+        )
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
             response = await User.get(id);
@@ -81,7 +112,14 @@ class UserControllerClass {
         return response;
     }
 
-    async getAllUsers({ page, limit, where, orderBy }) {
+    async getAllUsers(accessToken, { page, limit, where, orderBy}) {
+        if(!User.hasAdmin)
+            throw new CustomError("Uninitialized application");
+        if(
+            !accessToken ||
+            !UserRole.roles.find(r => r.name === accessToken.payload.roles)?.grants.find(g => g.privilege.id === Privilege.READ_USER)
+        )
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
             const condition = Condition.from(where);
@@ -98,6 +136,35 @@ class UserControllerClass {
                 throw new CustomError("Internal server error");
         }
         return response;
+    }
+
+    async fromCredentials(phoneNumber, pwd) {
+        if(!User.hasAdmin)
+            throw new CustomError("Uninitialized application");
+        try {
+            phoneNumber = phoneNumber?.trim?.();
+            pwd = pwd?.trim?.();
+            const user = await User.withCredentials(phoneNumber, pwd);
+            if(user == undefined || user.deletedAt != null)
+                throw new CustomError("User not exists");
+            else if(user.status.id === UserStatus.INACTIVE)
+                throw new CustomError("User is inactivated");
+            else if(user.status.id === UserStatus.RESTRICTED)
+                throw new CustomError("User is restricted indefinitely");
+            else{
+                const jwt = JWT.generate({
+                    sub: user.id,
+                    name: user.name,
+                    roles: user.role.name
+                })
+                return jwt.export();
+            }
+        } catch (err) { console.log(err);
+            if(err instanceof CustomError)
+                throw err;
+            else
+                throw new CustomError("Internal server error");
+        }
     }
 
 }

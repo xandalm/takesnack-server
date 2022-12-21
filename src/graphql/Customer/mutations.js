@@ -8,8 +8,8 @@ const GQLMutations_Customer = {
         args: {
             input: { type: new GraphQLNonNull(GQLInput_Customer) }
         },
-        resolve: (_, { input }) => {
-            return CustomerController.createCustomer(input);
+        resolve: (_, { input }, { token }) => {
+            return CustomerController.createCustomer(token, input);
         }
     },
     updateCustomer: {
@@ -17,8 +17,8 @@ const GQLMutations_Customer = {
         args: {
             input: { type: new GraphQLNonNull(GQLInput_Customer) }
         },
-        resolve: (_, { input }) => {
-            return CustomerController.updateCustomer(input);
+        resolve: (_, { input }, { token }) => {
+            return CustomerController.updateCustomer(token, input);
         }
     },
     deleteCustomer: {
@@ -26,8 +26,8 @@ const GQLMutations_Customer = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) }
         },
-        resolve: (_, { id }) => {
-            return CustomerController.deleteCustomer(id);
+        resolve: (_, { id }, { token }) => {
+            return CustomerController.deleteCustomer(token, id);
         }
     }
 }

@@ -1,5 +1,7 @@
 const { GraphQLNonNull, GraphQLInt, GraphQLString } = require("graphql");
 const CustomerController = require("../../controllers/CustomerController");
+const { Privilege } = require("../../models/Privilege");
+const CustomError = require("../../utils/errors");
 const { GQLInput_Condition, GQLInput_OrderBy } = require("../types");
 const { GQLObject_Customer, GQLObject_CustomerPage } = require("./types");
 
@@ -12,8 +14,8 @@ const GQLQueries_Customer = {
             where: { type: GQLInput_Condition },
             orderBy: { type: GQLInput_OrderBy }
         },
-        resolve: (_, args) => {
-            return CustomerController.getAllCustomers(args);
+        resolve: (_, args, { token }) => {
+            return CustomerController.getAllCustomers(token, args);
         }
     },
     customer: {
@@ -21,8 +23,18 @@ const GQLQueries_Customer = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) }
         },
-        resolve: (_, { id }) => {
-            return CustomerController.getCustomer(id);
+        resolve: (_, { id }, { token }) => {
+            return CustomerController.getCustomer(token, id);
+        }
+    },
+    customerToken: {
+        type: GraphQLString,
+        args: {
+            phoneNumber: { type: new GraphQLNonNull(GraphQLString) },
+            pwd: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (_, { phoneNumber, pwd }) => {
+            return CustomerController.fromCredentials(phoneNumber, pwd);
         }
     }
 }
