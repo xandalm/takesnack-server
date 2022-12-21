@@ -344,9 +344,11 @@ class Customer extends Model {
         var res = false;
         try {
             this.#props.deletedAt = this.deletedAt??new Date;
-            await connection(Customer._tablename_)
+            var data = await connection(Customer._tablename_)
                 .update({ deletedAt: this.deletedAt })
                 .where({ id: this.id, deletedAt: null });
+            if(data !== 1)
+                throw new CustomError("Customer not exist");
             res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);

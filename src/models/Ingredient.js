@@ -238,9 +238,11 @@ class Ingredient extends Model {
         var res = false;
         try {
             this.#props.deletedAt = new Date;
-            await connection(Ingredient._tablename_)
+            var data = await connection(Ingredient._tablename_)
                 .update({ deletedAt: this.deletedAt })
                 .where({ id: this.id, deletedAt: null });
+            if(data !== 1)
+                throw new CustomError("Ingredient not exist");
             res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);

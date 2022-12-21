@@ -331,9 +331,11 @@ class Product extends Model {
         var res = false;
         try {
             this.#props.deletedAt = this.deletedAt??new Date;
-            await connection(Product._tablename_)
+            var data = await connection(Product._tablename_)
                 .update({ deletedAt: this.deletedAt })
                 .where({ id: this.id, deletedAt: null });
+            if(data !== 1)
+                throw new CustomError("Product not exist");
             res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);
@@ -588,6 +590,8 @@ class ProductIngredient extends Model {
             var data = await connection(ProductIngredient._tablename_)
                 .update({ deletedAt: this.deletedAt })
                 .where({ product: this.product.id, ingredient: this.ingredient.id, deletedAt: null });
+            if(data !== 1)
+                throw new CustomError("Product ingredient not exist");
             res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);

@@ -282,9 +282,11 @@ class UserRole extends Model {
             throw new CustomError("Administrator cannot be deleted");
         try {
             this.#props.deletedAt = this.deletedAt??new Date;
-            await connection(UserRole._tablename_)
+            var data = await connection(UserRole._tablename_)
                 .update({ deletedAt: this.deletedAt })
                 .where({ id: this.id, deletedAt: null });
+            if(data !== 1)
+                throw new CustomError("User role not exist");
             res = true;
             UserRole.delete(this.id);
         } catch (err) {
@@ -473,6 +475,8 @@ class UserRoleGrant extends Model {
             var data = await connection(UserRoleGrant._tablename_)
                 .update({ deletedAt: this.deletedAt })
                 .where({ role: this.role.id, privilege: this.privilege.id, deletedAt: null });
+            if(data !== 1)
+                throw new CustomError("User role grant not exist");
             res = true;
             UserRole.load(this.role.id);
         } catch (err) {

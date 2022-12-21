@@ -408,9 +408,11 @@ class User extends Model {
         var res = false;
         try {
             this.#props.deletedAt = this.deletedAt??new Date;
-            await connection(User._tablename_)
+            var data = await connection(User._tablename_)
                 .update({ deletedAt: this.deletedAt })
                 .where({ id: this.id, deletedAt: null });
+            if(data !== 1)
+                throw new CustomError("User not exist");
             res = true;
             User.hasAdmin = await User.getAll(Condition.from({ condition: { field: 'role', operator: '==', value: 1 } })).length > 0;
         } catch (err) {
