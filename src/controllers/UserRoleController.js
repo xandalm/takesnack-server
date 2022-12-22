@@ -3,10 +3,15 @@ const { UserRole, UserGrant, UserRoleGrant } = require("../models/UserRole");
 const { Condition } = require("../utils/condition");
 const CustomError = require("../utils/errors");
 const { OrderBy } = require("../utils/order");
+const Controller = require("./Controller");
 
-class UserRoleControllerClass {
+class UserRoleControllerClass extends Controller {
 
-    async createUserRole(input) {
+    async createUserRole(accessToken, input) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_USER_ROLE);
         var response;
         try {
             const props = Object.assign({}, input);
@@ -22,7 +27,11 @@ class UserRoleControllerClass {
         return response;
     }
 
-    async updateUserRole(input) {
+    async updateUserRole(accessToken, input) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_USER_ROLE);
         var response;
         try {
             const props = Object.assign({}, input);
@@ -44,7 +53,11 @@ class UserRoleControllerClass {
         return response;
     }
 
-    async deleteUserRole(id) {
+    async deleteUserRole(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_USER_ROLE);
         var response;
         try {
             const role = await UserRole.get(id);
@@ -61,7 +74,11 @@ class UserRoleControllerClass {
         return response;
     }
 
-    async getUserRole(id) {
+    async getUserRole(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.READ_USER_ROLE);
         var response;
         try {
             response = await UserRole.get(id);
@@ -74,7 +91,11 @@ class UserRoleControllerClass {
         return response;
     }
 
-    async getAllUserRoles({ page, limit, where, orderBy }) {
+    async getAllUserRoles(accessToken, { page, limit, where, orderBy }) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.READ_USER_ROLE);
         var response;
         try {
             const condition = Condition.from(where);
@@ -93,7 +114,11 @@ class UserRoleControllerClass {
         return response;
     }
 
-    async grantPrivilege(roleId, privilegeId) {
+    async grantPrivilege(accessToken, roleId, privilegeId) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_USER_ROLE);
         var response;
         try {
             const role = await UserRole.get(roleId);
@@ -114,7 +139,11 @@ class UserRoleControllerClass {
         return response;
     }
 
-    async removePrivilege(roleId, privilegeId) {
+    async removePrivilege(accessToken, roleId, privilegeId) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_USER_ROLE);
         var response;
         try {
             const rolePrivilege = await UserRoleGrant.get(roleId, privilegeId);

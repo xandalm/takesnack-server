@@ -12,8 +12,8 @@ const GQLQueries_UserStatus = {
             where: { type: GQLInput_Condition },
             orderBy: { type: GQLInput_OrderBy }
         },
-        resolve: (_, args) => {
-            return UserStatusController.getAllUserStatuses(args);
+        resolve: (_, args, { token }) => {
+            return UserStatusController.getAllUserStatuses(token, args);
         }
     },
     userStatus: {
@@ -21,8 +21,8 @@ const GQLQueries_UserStatus = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { id }) => {
-            return UserStatusController.getUserStatus(id);
+        resolve: (_, { id }, { token }) => {
+            return UserStatusController.getUserStatus(token, id);
         }
     }
 }

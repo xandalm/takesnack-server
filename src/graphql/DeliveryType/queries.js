@@ -12,8 +12,8 @@ const GQLQueries_DeliveryType = {
             where: { type: GQLInput_Condition },
             orderBy: { type: GQLInput_OrderBy }
         },
-        resolve: (_, args) => {
-            return DeliveryTypeController.getAllDeliveryTypes(args);
+        resolve: (_, args, { token }) => {
+            return DeliveryTypeController.getAllDeliveryTypes(token, args);
         }
     },
     deliveryType: {
@@ -21,8 +21,8 @@ const GQLQueries_DeliveryType = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { id }) => {
-            return DeliveryTypeController.getDeliveryType(id);
+        resolve: (_, { id }, { token }) => {
+            return DeliveryTypeController.getDeliveryType(token, id);
         }
     }
 }

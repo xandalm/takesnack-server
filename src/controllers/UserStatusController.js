@@ -2,10 +2,14 @@ const { UserStatus } = require("../models/UserStatus");
 const { Condition } = require("../utils/condition");
 const { OrderBy } = require("../utils/order");
 const CustomError = require("../utils/errors");
+const Controller = require("./Controller");
 
-class UserStatusControllerClass {
+class UserStatusControllerClass extends Controller {
 
-    async getUserStatus(id) {
+    async getUserStatus(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
         var response;
         try {
             response = await UserStatus.get(id);
@@ -18,7 +22,10 @@ class UserStatusControllerClass {
         return response;
     }
 
-    async getAllUserStatuses({ page, limit, where, orderBy }) {
+    async getAllUserStatuses(accessToken, { page, limit, where, orderBy }) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
         var response;
         try {
             const condition = Condition.from(where);

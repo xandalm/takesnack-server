@@ -12,8 +12,8 @@ const GQLQueries_Privilege = {
             where: { type: GQLInput_Condition },
             orderBy: { type: GQLInput_OrderBy }
         },
-        resolve: (_, args) => {
-            return PrivilegeController.getAllPrivileges(args);
+        resolve: (_, args, { token }) => {
+            return PrivilegeController.getAllPrivileges(token, args);
         }
     },
     privilege: {
@@ -21,8 +21,8 @@ const GQLQueries_Privilege = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { id }) => {
-            return PrivilegeController.getPrivilege(id);
+        resolve: (_, { id }, { token }) => {
+            return PrivilegeController.getPrivilege(token, id);
         }
     }
 }

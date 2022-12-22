@@ -2,10 +2,16 @@ const { OrderStatus } = require("../models/OrderStatus");
 const { Condition } = require("../utils/condition");
 const { OrderBy } = require("../utils/order");
 const CustomError = require("../utils/errors");
+const Controller = require("./Controller");
+const { Privilege } = require("../models/Privilege");
 
-class OrderStatusControllerClass {
+class OrderStatusControllerClass extends Controller {
 
-    async getOrderStatus(id) {
+    async getOrderStatus(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.READ_ORDER_STATUS);
         var response;
         try {
             response = await OrderStatus.get(id);
@@ -18,7 +24,11 @@ class OrderStatusControllerClass {
         return response;
     }
 
-    async getAllOrderStatuses({ page, limit, where, orderBy }) {
+    async getAllOrderStatuses(accessToken, { page, limit, where, orderBy }) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.READ_ORDER_STATUS);
         var response;
         try {
             const condition = Condition.from(where);

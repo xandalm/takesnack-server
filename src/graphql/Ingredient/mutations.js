@@ -8,8 +8,8 @@ const GQLMutations_Ingredient = {
         args: {
             input: { type: new GraphQLNonNull(GQLInput_Ingredient) }
         },
-        resolve: (_, { input }) => {
-            return IngredientController.createIngredient(input);
+        resolve: (_, { input }, { token }) => {
+            return IngredientController.createIngredient(token, input);
         }
     },
     updateIngredient: {
@@ -17,17 +17,17 @@ const GQLMutations_Ingredient = {
         args: {
             input:  { type: new GraphQLNonNull(GQLInput_Ingredient) }
         },
-        resolve: (_, { input }) => {
-            return IngredientController.updateIngredient(input);
+        resolve: (_, { input }, { token }) => {
+            return IngredientController.updateIngredient(token, input);
         }
     },
     deleteIngredient: {
-        type: GraphQLBoolean,
+        type: GQLObject_Ingredient,
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { id }) => {
-            return IngredientController.deleteIngredient(id);
+        resolve: (_, { id }, { token }) => {
+            return IngredientController.deleteIngredient(token, id);
         }
     }
 }

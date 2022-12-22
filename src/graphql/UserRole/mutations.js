@@ -8,8 +8,8 @@ const GQLMutations_UserRole = {
         args: {
             input: { type: new GraphQLNonNull(GQLInput_UserRole) }
         },
-        resolve: (_, { input }) => {
-            return UserRoleController.createUserRole(input);
+        resolve: (_, { input }, { token }) => {
+            return UserRoleController.createUserRole(token, input);
         }
     },
     updateUserRole: {
@@ -17,8 +17,8 @@ const GQLMutations_UserRole = {
         args: {
             input:  { type: new GraphQLNonNull(GQLInput_UserRole) }
         },
-        resolve: (_, { input }) => {
-            return UserRoleController.updateUserRole(input);
+        resolve: (_, { input }, { token }) => {
+            return UserRoleController.updateUserRole(token, input);
         }
     },
     deleteUserRole: {
@@ -26,8 +26,8 @@ const GQLMutations_UserRole = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { id }) => {
-            return UserRoleController.deleteUserRole(id);
+        resolve: (_, { id }, { token }) => {
+            return UserRoleController.deleteUserRole(token, id);
         }
     },
     grantPrivilege: {
@@ -36,8 +36,8 @@ const GQLMutations_UserRole = {
             roleId: { type: new GraphQLNonNull(GraphQLInt) },
             privilegeId: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { roleId, privilegeId }) => {
-            return UserRoleController.grantPrivilege(roleId, privilegeId);
+        resolve: (_, { roleId, privilegeId }, { token }) => {
+            return UserRoleController.grantPrivilege(token, roleId, privilegeId);
         }
     },
     removePrivilege: {
@@ -46,8 +46,8 @@ const GQLMutations_UserRole = {
             roleId: { type: new GraphQLNonNull(GraphQLInt) },
             privilegeId: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { roleId, privilegeId }) => {
-            return UserRoleController.removePrivilege(roleId, privilegeId);
+        resolve: (_, { roleId, privilegeId }, { token }) => {
+            return UserRoleController.removePrivilege(token, roleId, privilegeId);
         }
     }
 }

@@ -1,11 +1,17 @@
 const { Ingredient } = require("../models/Ingredient");
+const { Privilege } = require("../models/Privilege");
 const { Condition } = require("../utils/condition");
 const CustomError = require("../utils/errors");
 const { OrderBy } = require("../utils/order");
+const Controller = require("./Controller");
 
-class IngredientControllerClass {
+class IngredientControllerClass extends Controller {
 
-    async createIngredient(input) {
+    async createIngredient(accessToken, input) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_INGREDIENT);
         var response;
         try {
             const props = Object.assign({}, input);
@@ -21,7 +27,11 @@ class IngredientControllerClass {
         return response;
     }
 
-    async updateIngredient(input) {
+    async updateIngredient(accessToken, input) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_INGREDIENT);
         var response;
         try {
             const props = Object.assign({}, input);
@@ -43,7 +53,11 @@ class IngredientControllerClass {
         return response;
     }
 
-    async deleteIngredient(id) {
+    async deleteIngredient(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_INGREDIENT);
         var response;
         try {
             const pc = await Ingredient.get(id);
@@ -60,7 +74,10 @@ class IngredientControllerClass {
         return response;
     }
 
-    async getIngredient(id) {
+    async getIngredient(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
         var response;
         try {
             response = await Ingredient.get(id);
@@ -73,7 +90,10 @@ class IngredientControllerClass {
         return response;
     }
 
-    async getAllProductCategories({ page, limit, where, orderBy }) {
+    async getAllIngredients(accessToken, { page, limit, where, orderBy }) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
         var response;
         try {
             const condition = Condition.from(where);

@@ -12,8 +12,8 @@ const GQLQueries_Order = {
             where: { type: GQLInput_Condition },
             orderBy: { type: GQLInput_OrderBy }
         },
-        resolve: (_, args) => {
-            return OrderController.getAllOrders(args);
+        resolve: (_, args, { token }) => {
+            return OrderController.getAllOrders(token, args);
         }
     },
     order: {
@@ -21,8 +21,8 @@ const GQLQueries_Order = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) }
         },
-        resolve: (_, { id }) => {
-            return OrderController.getOrder(id);
+        resolve: (_, { id }, { token }) => {
+            return OrderController.getOrder(token, id);
         }
     }
 }

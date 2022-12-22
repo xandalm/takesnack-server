@@ -1,14 +1,20 @@
 const { Ingredient } = require("../models/Ingredient");
+const { Privilege } = require("../models/Privilege");
 const { Product, ProductIngredient } = require("../models/Product");
 const { ProductCategory } = require("../models/ProductCategory");
 const { ProductStatus } = require("../models/ProductStatus");
 const { Condition } = require("../utils/condition");
 const CustomError = require("../utils/errors");
 const { OrderBy } = require("../utils/order");
+const Controller = require("./Controller");
 
-class ProductControllerClass {
+class ProductControllerClass extends Controller {
 
-    async createProduct(input) {
+    async createProduct(accessToken, input) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_PRODUCT);
         var response;
         try {
             const props = Object.assign({}, input);
@@ -24,7 +30,11 @@ class ProductControllerClass {
         return response;
     }
 
-    async updateProduct(input) {
+    async updateProduct(accessToken, input) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_PRODUCT);
         var response;
         try {
             const props = Object.assign({}, input);
@@ -52,7 +62,11 @@ class ProductControllerClass {
         return response;
     }
 
-    async deleteProduct(id) {
+    async deleteProduct(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_PRODUCT);
         var response;
         try {
             const product = await Product.get(id);
@@ -69,7 +83,10 @@ class ProductControllerClass {
         return response;
     }
 
-    async getProduct(id) {
+    async getProduct(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
         var response;
         try {
             response = await Product.get(id);
@@ -82,7 +99,10 @@ class ProductControllerClass {
         return response;
     }
 
-    async getAllProducts({ page, limit, where, orderBy }) {
+    async getAllProducts(accessToken, { page, limit, where, orderBy }) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
         var response;
         try {
             const condition = Condition.from(where);
@@ -101,7 +121,11 @@ class ProductControllerClass {
         return response;
     }
 
-    async addIngredient(productId, ingredientId, quantity) {
+    async addIngredient(accessToken, productId, ingredientId, quantity) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_PRODUCT);
         var response;
         try {
             const product = await Product.get(productId);
@@ -122,7 +146,11 @@ class ProductControllerClass {
         return response;
     }
 
-    async updateProductIngredient(productId, ingredientId, quantity) {
+    async updateProductIngredient(accessToken, productId, ingredientId, quantity) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_PRODUCT);
         var response;
         try {
             const props = Object.assign({}, input);
@@ -144,7 +172,11 @@ class ProductControllerClass {
         return response;
     }
 
-    async removeIngredient(productId, ingredientId) {
+    async removeIngredient(accessToken, productId, ingredientId) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_PRODUCT);
         var response;
         try {
             const productIngredient = await ProductIngredient.get(productId, ingredientId);

@@ -37,7 +37,7 @@ class CustomerControllerClass extends Controller {
         this.assertTrustToken(accessToken);
         if(accessToken.payload.roles)
             this.assertPrivilegeGranted(accessToken, Privilege.WRITE_CUSTOMER);
-        else if(accessToken.payload.sub && accessToken.payload.sub !== input?.id)
+        else if(!accessToken.payload.sub || accessToken.payload.sub !== input?.id)
             throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
@@ -70,7 +70,7 @@ class CustomerControllerClass extends Controller {
         this.assertTrustToken(accessToken);
         if(accessToken.payload.roles)
             this.assertPrivilegeGranted(accessToken, Privilege.WRITE_CUSTOMER);
-        else if(accessToken.payload.sub && accessToken.payload.sub !== input?.id)
+        else if(!accessToken.payload.sub || accessToken.payload.sub !== input?.id)
             throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {

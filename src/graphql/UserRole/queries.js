@@ -12,8 +12,8 @@ const GQLQueries_UserRole = {
             where: { type: GQLInput_Condition },
             orderBy: { type: GQLInput_OrderBy }
         },
-        resolve: (_, args) => {
-            return UserRoleController.getAllUserRoles(args);
+        resolve: (_, args, { token }) => {
+            return UserRoleController.getAllUserRoles(token, args);
         }
     },
     userRole: {
@@ -21,8 +21,8 @@ const GQLQueries_UserRole = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { id }) => {
-            return UserRoleController.getUserRole(id);
+        resolve: (_, { id }, { token }) => {
+            return UserRoleController.getUserRole(token, id);
         }
     }
 }

@@ -1,11 +1,17 @@
+const { Privilege } = require("../models/Privilege");
 const { ProductCategory } = require("../models/ProductCategory");
 const { Condition } = require("../utils/condition");
 const CustomError = require("../utils/errors");
 const { OrderBy } = require("../utils/order");
+const Controller = require("./Controller");
 
-class ProductCategoryControllerClass {
+class ProductCategoryControllerClass extends Controller {
 
-    async createProductCategory(input) {
+    async createProductCategory(accessToken, input) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_PRODUCT_CATEGORY);
         var response;
         try {
             const props = Object.assign({}, input);
@@ -21,7 +27,11 @@ class ProductCategoryControllerClass {
         return response;
     }
 
-    async updateProductCategory(input) {
+    async updateProductCategory(accessToken, input) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_PRODUCT_CATEGORY);
         var response;
         try {
             const props = Object.assign({}, input);
@@ -43,7 +53,11 @@ class ProductCategoryControllerClass {
         return response;
     }
 
-    async deleteProductCategory(id) {
+    async deleteProductCategory(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.WRITE_PRODUCT_CATEGORY);
         var response;
         try {
             const pc = await ProductCategory.get(id);
@@ -60,7 +74,10 @@ class ProductCategoryControllerClass {
         return response;
     }
 
-    async getProductCategory(id) {
+    async getProductCategory(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
         var response;
         try {
             response = await ProductCategory.get(id);
@@ -73,7 +90,10 @@ class ProductCategoryControllerClass {
         return response;
     }
 
-    async getAllProductCategories({ page, limit, where, orderBy }) {
+    async getAllProductCategories(accessToken, { page, limit, where, orderBy }) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
         var response;
         try {
             const condition = Condition.from(where);

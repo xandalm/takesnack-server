@@ -12,8 +12,8 @@ const GQLQueries_CustomerStatus = {
             where: { type: GQLInput_Condition },
             orderBy: { type: GQLInput_OrderBy }
         },
-        resolve: (_, args) => {
-            return CustomerStatusController.getAllCustomerStatuses(args);
+        resolve: (_, args, { token }) => {
+            return CustomerStatusController.getAllCustomerStatuses(token, args);
         }
     },
     customerStatus: {
@@ -21,8 +21,8 @@ const GQLQueries_CustomerStatus = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { id }) => {
-            return CustomerStatusController.getCustomerStatus(id);
+        resolve: (_, { id }, { token }) => {
+            return CustomerStatusController.getCustomerStatus(token, id);
         }
     }
 }

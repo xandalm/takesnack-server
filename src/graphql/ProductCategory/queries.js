@@ -12,8 +12,8 @@ const GQLQueries_ProductCategory = {
             where: { type: GQLInput_Condition },
             orderBy: { type: GQLInput_OrderBy }
         },
-        resolve: (_, args) => {
-            return ProductCategoryController.getAllProductCategories(args);
+        resolve: (_, args, { token }) => {
+            return ProductCategoryController.getAllProductCategories(token, args);
         }
     },
     productCategory: {
@@ -21,8 +21,8 @@ const GQLQueries_ProductCategory = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { id }) => {
-            return ProductCategoryController.getProductCategory(id);
+        resolve: (_, { id }, { token }) => {
+            return ProductCategoryController.getProductCategory(token, id);
         }
     }
 }

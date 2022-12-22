@@ -2,10 +2,14 @@ const { DeliveryType } = require("../models/DeliveryType");
 const { Condition } = require("../utils/condition");
 const { OrderBy } = require("../utils/order");
 const CustomError = require("../utils/errors");
+const Controller = require("./Controller");
 
-class DeliveryTypeControllerClass {
+class DeliveryTypeControllerClass extends Controller {
 
-    async getDeliveryType(id) {
+    async getDeliveryType(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
         var response;
         try {
             response = await DeliveryType.get(id);
@@ -18,7 +22,10 @@ class DeliveryTypeControllerClass {
         return response;
     }
 
-    async getAllDeliveryTypes({ page, limit, where, orderBy }) {
+    async getAllDeliveryTypes(accessToken, { page, limit, where, orderBy }) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
         var response;
         try {
             const condition = Condition.from(where);

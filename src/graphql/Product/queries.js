@@ -12,8 +12,8 @@ const GQLQueries_Product = {
             where: { type: GQLInput_Condition },
             orderBy: { type: GQLInput_OrderBy }
         },
-        resolve: (_, args) => {
-            return ProductController.getAllProducts(args);
+        resolve: (_, args, { token }) => {
+            return ProductController.getAllProducts(token, args);
         }
     },
     product: {
@@ -21,8 +21,8 @@ const GQLQueries_Product = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) }
         },
-        resolve: (_, { id }) => {
-            return ProductController.getProduct(id);
+        resolve: (_, { id }, { token }) => {
+            return ProductController.getProduct(token, id);
         }
     }
 }

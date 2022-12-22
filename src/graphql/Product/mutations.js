@@ -8,8 +8,8 @@ const GQLMutations_Product = {
         args: {
             input: { type: new GraphQLNonNull(GQLInput_Product) }
         },
-        resolve: (_, { input }) => {
-            return ProductController.createProduct(input);
+        resolve: (_, { input }, { token }) => {
+            return ProductController.createProduct(token, input);
         }
     },
     updateProduct: {
@@ -17,8 +17,8 @@ const GQLMutations_Product = {
         args: {
             input:  { type: new GraphQLNonNull(GQLInput_Product) }
         },
-        resolve: (_, { input }) => {
-            return ProductController.updateProduct(input);
+        resolve: (_, { input }, { token }) => {
+            return ProductController.updateProduct(token, input);
         }
     },
     deleteProduct: {
@@ -26,8 +26,8 @@ const GQLMutations_Product = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) }
         },
-        resolve: (_, { id }) => {
-            return ProductController.deleteProduct(id);
+        resolve: (_, { id }, { token }) => {
+            return ProductController.deleteProduct(token, id);
         }
     },
     addIngredient: {
@@ -37,8 +37,8 @@ const GQLMutations_Product = {
             ingredientId: { type: new GraphQLNonNull(GraphQLInt) },
             quantity: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { productId, ingredientId, quantity }) => {
-            return ProductController.addIngredient(productId, ingredientId, quantity);
+        resolve: (_, { productId, ingredientId, quantity }, { token }) => {
+            return ProductController.addIngredient(token, productId, ingredientId, quantity);
         }
     },
     updateIngredientQuantity: {
@@ -48,8 +48,8 @@ const GQLMutations_Product = {
             ingredientId: { type: new GraphQLNonNull(GraphQLInt) },
             quantity: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { productId, ingredientId, quantity }) => {
-            return ProductController.updateProductIngredient(productId, ingredientId, quantity);
+        resolve: (_, { productId, ingredientId, quantity }, { token }) => {
+            return ProductController.updateProductIngredient(token, productId, ingredientId, quantity);
         }
     },
     removeIngredient: {
@@ -58,8 +58,8 @@ const GQLMutations_Product = {
             productId: { type: new GraphQLNonNull(GraphQLString) },
             ingredientId: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { productId, ingredientId }) => {
-            return ProductController.removeIngredient(productId, ingredientId);
+        resolve: (_, { productId, ingredientId }, { token }) => {
+            return ProductController.removeIngredient(token, productId, ingredientId);
         }
     }
 }

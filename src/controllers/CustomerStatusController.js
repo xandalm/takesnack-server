@@ -2,10 +2,16 @@ const { CustomerStatus } = require("../models/CustomerStatus");
 const { Condition } = require("../utils/condition");
 const { OrderBy } = require("../utils/order");
 const CustomError = require("../utils/errors");
+const Controller = require("./Controller");
+const { Privilege } = require("../models/Privilege");
 
-class CustomerStatusControllerClass {
+class CustomerStatusControllerClass extends Controller {
 
-    async getCustomerStatus(id) {
+    async getCustomerStatus(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.READ_CUSTOMER_STATUS);
         var response;
         try {
             response = await CustomerStatus.get(id);
@@ -18,7 +24,11 @@ class CustomerStatusControllerClass {
         return response;
     }
 
-    async getAllCustomerStatuses({ page, limit, where, orderBy }) {
+    async getAllCustomerStatuses(accessToken, { page, limit, where, orderBy }) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.READ_CUSTOMER_STATUS);
         var response;
         try {
             const condition = Condition.from(where);

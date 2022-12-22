@@ -3,10 +3,15 @@ const { Condition } = require("../utils/condition");
 const CustomError = require("../utils/errors");
 const { OrderBy } = require("../utils/order");
 const { parseToSafeInteger } = require("../utils/util");
+const Controller = require("./Controller");
 
-class PrivilegeControllerClass {
+class PrivilegeControllerClass extends Controller {
 
-    async getPrivilege(id) {
+    async getPrivilege(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.READ_PRIVILEGE);
         var response;
         try {
             response = await Privilege.get(id);
@@ -19,7 +24,11 @@ class PrivilegeControllerClass {
         return response;
     }
 
-    async getAllPrivileges({ page, limit, where, orderBy }) {
+    async getAllPrivileges(accessToken, { page, limit, where, orderBy }) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.READ_PRIVILEGE);
         var response;
         try {
             const condition = Condition.from(where);

@@ -6,10 +6,19 @@ const CustomError = require("../utils/errors");
 const { OrderBy } = require("../utils/order");
 const { Customer } = require("../models/Customer");
 const { DeliveryType } = require("../models/DeliveryType");
+const Controller = require("./Controller");
+const { Privilege } = require("../models/Privilege");
 
-class OrderControllerClass {
+class OrderControllerClass extends Controller {
 
-    async createOrder(input) {
+    async createOrder(accessToken, input) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        if(accessToken.payload.roles)
+            this.assertPrivilegeGranted(accessToken, Privilege.WRITE_ORDER);
+        else if(!accessToken.payload.sub || accessToken.payload.sub !== input?.customerId)
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
             const props = {};
@@ -30,7 +39,7 @@ class OrderControllerClass {
                         await new OrderItem({ order, product, quantity: item.quantity }).insert()
                     }
                     response = await Order.get(order.id);
-                } catch (error) {
+                } catch (err) {
                     await order.delete();
                     if(err instanceof CustomError)
                         throw err;
@@ -47,11 +56,20 @@ class OrderControllerClass {
         return response;
     }
 
-    async updateOrder(input) {
+    async updateOrder(accessToken, input) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        if(accessToken.payload.roles)
+            this.assertPrivilegeGranted(accessToken, Privilege.WRITE_ORDER);
+        else if(!accessToken.payload.sub)
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
             const props = Object.assign({}, input);
             const order = await Order.get(props?.id);
+            if(order && accessToken.payload.sub !== order.customer.id)
+                throw new CustomError("Unauthorized - missing valid access token");
             if(!order)
                 throw new CustomError("Cannot find order");
             if(props.hasOwnProperty('customerId')) {
@@ -79,10 +97,19 @@ class OrderControllerClass {
         return response;
     }
 
-    async deleteOrder(id) {
+    async deleteOrder(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        if(accessToken.payload.roles)
+            this.assertPrivilegeGranted(accessToken, Privilege.WRITE_ORDER);
+        else if(!accessToken.payload.sub)
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
             const order = await Order.get(id);
+            if(order && accessToken.payload.sub !== order.customer.id)
+                throw new CustomError("Unauthorized - missing valid access token");
             if(!order)
                 throw new CustomError("Cannot find order");
             if(await order.delete())
@@ -96,10 +123,20 @@ class OrderControllerClass {
         return response;
     }
 
-    async getOrder(id) {
+    async getOrder(accessToken, id) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        if(accessToken.payload.roles)
+            this.assertPrivilegeGranted(accessToken, Privilege.READ_ORDER);
+        else if(!accessToken.payload.sub)
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
-            response = await Order.get(id);
+            const order = await Order.get(id);
+            if(order && accessToken.payload.sub !== order.customer.id)
+                throw new CustomError("Unauthorized - missing valid access token");
+            response = order;
         } catch (err) {
             if(err instanceof CustomError)
                 throw err;
@@ -109,7 +146,11 @@ class OrderControllerClass {
         return response;
     }
 
-    async getAllOrders({ page, limit, where, orderBy }) {
+    async getAllOrders(accessToken, { page, limit, where, orderBy }) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        this.assertPrivilegeGranted(accessToken, Privilege.READ_ORDER);
         var response;
         try {
             const condition = Condition.from(where);
@@ -128,10 +169,19 @@ class OrderControllerClass {
         return response;
     }
 
-    async addOrderItem(orderId, productId, quantity) {
+    async addOrderItem(accessToken, orderId, productId, quantity) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        if(accessToken.payload.roles)
+            this.assertPrivilegeGranted(accessToken, Privilege.WRITE_ORDER);
+        else if(!accessToken.payload.sub)
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
             const order = await Order.get(orderId);
+            if(order && accessToken.payload.sub !== order.customer.id)
+                throw new CustomError("Unauthorized - missing valid access token");
             if(!order)
                 throw new CustomError("Cannot find order");
             const product = await Product.get(productId);
@@ -149,9 +199,21 @@ class OrderControllerClass {
         return response;
     }
 
-    async updateOrderItem(orderId, productId, quantity) {
+    async updateOrderItem(accessToken, orderId, productId, quantity) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        if(accessToken.payload.roles)
+            this.assertPrivilegeGranted(accessToken, Privilege.WRITE_ORDER);
+        else if(!accessToken.payload.sub)
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
+            const order = await Order.get(orderId);
+            if(order && accessToken.payload.sub !== order.customer.id)
+                throw new CustomError("Unauthorized - missing valid access token");
+            if(!order)
+                throw new CustomError("Cannot find order");
             const orderItem = await OrderItem.get(orderId, productId);
             if(!orderItem || orderItem.deletedAt)
                 throw new CustomError("Cannot find order item");
@@ -170,9 +232,21 @@ class OrderControllerClass {
         return response;
     }
 
-    async removeOrderItem(orderId, productId) {
+    async removeOrderItem(accessToken, orderId, productId) {
+        this.assertInitializedApp();
+        this.assertTokenType(accessToken);
+        this.assertTrustToken(accessToken);
+        if(accessToken.payload.roles)
+            this.assertPrivilegeGranted(accessToken, Privilege.WRITE_ORDER);
+        else if(!accessToken.payload.sub)
+            throw new CustomError("Unauthorized - missing valid access token");
         var response;
         try {
+            const order = await Order.get(orderId);
+            if(order && accessToken.payload.sub !== order.customer.id)
+                throw new CustomError("Unauthorized - missing valid access token");
+            if(!order)
+                throw new CustomError("Cannot find order");
             const orderItem = await OrderItem.get(orderId, productId);
             if(!orderItem)
                 throw new CustomError("Cannot find order item");

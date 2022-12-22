@@ -12,8 +12,8 @@ const GQLQueries_OrderStatus = {
             where: { type: GQLInput_Condition },
             orderBy: { type: GQLInput_OrderBy }
         },
-        resolve: (_, args) => {
-            return OrderStatusController.getAllOrderStatuses(args);
+        resolve: (_, args, { token }) => {
+            return OrderStatusController.getAllOrderStatuses(token, args);
         }
     },
     orderStatus: {
@@ -21,8 +21,8 @@ const GQLQueries_OrderStatus = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { id }) => {
-            return OrderStatusController.getOrderStatus(id);
+        resolve: (_, { id }, { token }) => {
+            return OrderStatusController.getOrderStatus(token, id);
         }
     }
 }

@@ -8,8 +8,8 @@ const GQLMutations_Order = {
         args: {
             input: { type: new GraphQLNonNull(GQLInput_Order) }
         },
-        resolve: (_, { input }) => {
-            return OrderController.createOrder(input);
+        resolve: (_, { input }, { token }) => {
+            return OrderController.createOrder(token, input);
         }
     },
     updateOrder: {
@@ -17,8 +17,8 @@ const GQLMutations_Order = {
         args: {
             input:  { type: new GraphQLNonNull(GQLInput_Order_NoItems) }
         },
-        resolve: (_, { input }) => {
-            return OrderController.updateOrder(input);
+        resolve: (_, { input }, { token }) => {
+            return OrderController.updateOrder(token, input);
         }
     },
     deleteOrder: {
@@ -26,8 +26,8 @@ const GQLMutations_Order = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) }
         },
-        resolve: (_, { id }) => {
-            return OrderController.deleteOrder(id);
+        resolve: (_, { id }, { token }) => {
+            return OrderController.deleteOrder(token, id);
         }
     },
     addOrderItem: {
@@ -37,8 +37,8 @@ const GQLMutations_Order = {
             productId: { type: new GraphQLNonNull(GraphQLString) },
             quantity: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { orderId, productId, quantity }) => {
-            return OrderController.addOrderItem(orderId, productId, quantity);
+        resolve: (_, { orderId, productId, quantity }, { token }) => {
+            return OrderController.addOrderItem(token, orderId, productId, quantity);
         }
     },
     updateOrderItemQuantity: {
@@ -48,8 +48,8 @@ const GQLMutations_Order = {
             productId: { type: new GraphQLNonNull(GraphQLString) },
             quantity: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { orderId, productId, quantity }) => {
-            return OrderController.updateOrderItem(orderId, productId, quantity);
+        resolve: (_, { orderId, productId, quantity }, { token }) => {
+            return OrderController.updateOrderItem(token, orderId, productId, quantity);
         }
     },
     removeOrderItem: {
@@ -58,8 +58,8 @@ const GQLMutations_Order = {
             orderId: { type: new GraphQLNonNull(GraphQLString) },
             productId: { type: new GraphQLNonNull(GraphQLString) }
         },
-        resolve: (_, { orderId, productId }) => {
-            return OrderController.removeOrderItem(orderId, productId);
+        resolve: (_, { orderId, productId }, { token }) => {
+            return OrderController.removeOrderItem(token, orderId, productId);
         }
     }
 }

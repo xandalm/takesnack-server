@@ -8,8 +8,8 @@ const GQLMutations_ProductCategory = {
         args: {
             input: { type: new GraphQLNonNull(GQLInput_ProductCategory) }
         },
-        resolve: (_, { input }) => {
-            return ProductCategoryController.createProductCategory(input);
+        resolve: (_, { input }, { token }) => {
+            return ProductCategoryController.createProductCategory(token, input);
         }
     },
     updateProductCategory: {
@@ -17,8 +17,8 @@ const GQLMutations_ProductCategory = {
         args: {
             input:  { type: new GraphQLNonNull(GQLInput_ProductCategory) }
         },
-        resolve: (_, { input }) => {
-            return ProductCategoryController.updateProductCategory(input);
+        resolve: (_, { input }, { token }) => {
+            return ProductCategoryController.updateProductCategory(token, input);
         }
     },
     deleteProductCategory: {
@@ -26,8 +26,8 @@ const GQLMutations_ProductCategory = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { id }) => {
-            return ProductCategoryController.deleteProductCategory(id);
+        resolve: (_, { id }, { token }) => {
+            return ProductCategoryController.deleteProductCategory(token, id);
         }
     }
 }

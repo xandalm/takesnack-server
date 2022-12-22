@@ -4,7 +4,7 @@ const { GQLInput_Condition, GQLInput_OrderBy } = require("../types");
 const { GQLObject_Ingredient, GQLObject_IngredientPage } = require("./types");
 
 const GQLQueries_Ingredient = {
-    userRoles: {
+    ingredients: {
         type: GQLObject_IngredientPage,
         args: {
             page: { type: GraphQLInt },
@@ -12,17 +12,17 @@ const GQLQueries_Ingredient = {
             where: { type: GQLInput_Condition },
             orderBy: { type: GQLInput_OrderBy }
         },
-        resolve: (_, args) => {
-            return IngredientController.getAllProductCategories(args);
+        resolve: (_, args, { token }) => {
+            return IngredientController.getAllIngredients(token, args);
         }
     },
-    userRole: {
+    ingredient: {
         type: GQLObject_Ingredient,
         args: {
             id: { type: new GraphQLNonNull(GraphQLInt) }
         },
-        resolve: (_, { id }) => {
-            return IngredientController.getIngredient(id);
+        resolve: (_, { id }, { token }) => {
+            return IngredientController.getIngredient(token, id);
         }
     }
 }
