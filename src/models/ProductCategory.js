@@ -23,6 +23,9 @@ class ProductCategory extends Model {
         this.fieldRewriter.add('deletedAt', `${this._tablename_}.deletedAt`, `${this._tablename_}_deletedAt`);
     }
 
+    #wasEdited = true;
+    #isTrusted = false;
+
     #props = {
         id: null,
         name: null,
@@ -49,6 +52,7 @@ class ProductCategory extends Model {
                 throw new CustomError("Name can't be too long (max. length = 30)");
             this.#props.name = value;
         }
+        this.#wasEdited = true;
     }
     
     set description(value) {
@@ -62,7 +66,11 @@ class ProductCategory extends Model {
                 throw new CustomError("Description can't be too long (max. length = 100)");
             this.#props.description = value;
         }
+        this.#wasEdited = true;
     }
+
+    get wasEdited() { return this.#wasEdited }
+    get isTrusted() { return this.#isTrusted }
 
     get id() { return this.#props.id; }
     get name() { return this.#props.name; }
@@ -86,6 +94,8 @@ class ProductCategory extends Model {
         this.#props.createdAt = this.createdAt!=undefined? new Date(this.createdAt): this.createdAt;
         this.#props.updatedAt = this.updatedAt!=undefined? new Date(this.updatedAt): this.updatedAt;
         this.#props.deletedAt = this.deletedAt!=undefined? new Date(this.deletedAt): this.deletedAt;
+        this.#wasEdited = false;
+        this.#isTrusted = true;
         return this;
     }
 
@@ -161,6 +171,8 @@ class ProductCategory extends Model {
 
     async insert() {
         var res = false;
+        if(tthis.isTrusted)
+            throw new TypeError("Replication error");
         this.isValid();
         try {
             var [found] = await connection(ProductCategory._tablename_)
@@ -181,7 +193,6 @@ class ProductCategory extends Model {
                             deletedAt: this.deletedAt
                         })
                         .where({ id: this.id });
-                    res = true;
                 }
             } else {
                 this.#props.createdAt = new Date;
@@ -193,8 +204,9 @@ class ProductCategory extends Model {
                     })
                     .returning('id');
                 this.#props.id = data.id;
-                res = true;
             }
+            this.#isTrusted = true;
+            res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);
             if(err instanceof SqliteError)
@@ -207,6 +219,10 @@ class ProductCategory extends Model {
 
     async update() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Product category is unreliable, please load it from database first");
+        if(!this.wasEdited)
+            throw new TypeError("Nothing to update");
         this.isValid();
         try {
             var [found] = await connection(ProductCategory._tablename_)
@@ -237,6 +253,8 @@ class ProductCategory extends Model {
 
     async delete() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Product category is unreliable, please load it from database first");
         try {
             this.#props.deletedAt = this.deletedAt??new Date;
             var data = await connection(ProductCategory._tablename_)

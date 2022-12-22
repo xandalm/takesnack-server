@@ -53,6 +53,9 @@ class UserRole extends Model {
         this.load();
     }
 
+    #wasEdited = true;
+    #isTrusted = false;
+
     #props = {
         id: null,
         name: null,
@@ -80,6 +83,7 @@ class UserRole extends Model {
                 throw new CustomError("Name can't be too long (max. length = 30)");
             this.#props.name = value.toUpperCase();
         }
+        this.#wasEdited = true;
     }
     
     set description(value) {
@@ -93,7 +97,11 @@ class UserRole extends Model {
                 throw new CustomError("Description can't be too long (max. length = 100)");
             this.#props.description = value;
         }
+        this.#wasEdited = true;
     }
+
+    get wasEdited() { return this.#wasEdited }
+    get isTrusted() { return this.#isTrusted }
     
     get id() { return this.#props.id; }
     get name() { return this.#props.name; }
@@ -125,6 +133,8 @@ class UserRole extends Model {
         this.#props.createdAt = this.createdAt!=undefined? new Date(this.createdAt): this.createdAt;
         this.#props.updatedAt = this.updatedAt!=undefined? new Date(this.updatedAt): this.updatedAt;
         this.#props.deletedAt = this.deletedAt!=undefined? new Date(this.deletedAt): this.deletedAt;
+        this.#wasEdited = false;
+        this.#isTrusted = true;
         return this;
     }
 
@@ -200,6 +210,8 @@ class UserRole extends Model {
 
     async insert() {
         var res = false;
+        if(this.isTrusted)
+            throw new TypeError("Replication error");
         this.isValid();
         try {
             var [found] = await connection(UserRole._tablename_)
@@ -232,6 +244,7 @@ class UserRole extends Model {
                     .returning('id');
                 this.#props.id = data.id;
             }
+            this.#isTrusted = true;
             res = true;
             UserRole.load(this.id);
         } catch (err) {
@@ -246,6 +259,10 @@ class UserRole extends Model {
 
     async update() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("User role is unreliable, please load it from database first");
+        if(!this.wasEdited)
+            throw new TypeError("Nothing to update");
         if(this.id == 1)
             throw new CustomError("Administrator cannot be updated");
         this.isValid();
@@ -279,6 +296,8 @@ class UserRole extends Model {
 
     async delete() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("User role is unreliable, please load it from database first");
         if(this.id == 1)
             throw new CustomError("Administrator cannot be deleted");
         try {
@@ -305,6 +324,9 @@ class UserRole extends Model {
 class UserRoleGrant extends Model {
 
     static _tablename_ = 'UserRoleGrant';
+
+    #wasEdited = true;
+    #isTrusted = false;
 
     #props={
         role: null,
@@ -336,6 +358,7 @@ class UserRoleGrant extends Model {
                 throw new Error("'value' must be UserRole type");
             this.#props.role = value;
         }
+        this.#wasEdited = true;
     }
 
     set privilege(value) {
@@ -346,7 +369,11 @@ class UserRoleGrant extends Model {
                 throw new TypeError("'value' must be Privilege type");
             this.#props.privilege = value;
         }
+        this.#wasEdited = true;
     }
+
+    get wasEdited() { return this.#wasEdited }
+    get isTrusted() { return this.#isTrusted }
 
     get role() { return this.#props.role; }
     get privilege() { return this.#props.privilege; }
@@ -366,6 +393,8 @@ class UserRoleGrant extends Model {
         };
         this.#props.createdAt = this.createdAt? new Date(this.createdAt): this.createdAt;
         this.#props.deletedAt = this.deletedAt? new Date(this.deletedAt): this.deletedAt;
+        this.#wasEdited = false;
+        this.#isTrusted = true;
         return this;
     }
 
@@ -431,13 +460,17 @@ class UserRoleGrant extends Model {
 
     isValid() {
         if(!this.role)
-            throw new CustomError("Role is required");
+            throw new TypeError("Role is required");
+        if(!this.role.isTrusted || this.role.wasEdited)
+            throw new TypeError("User role is unreliable, please load it from database first and do not edit");
         if(!this.privilege)
-            throw new CustomError("Privilege is required");
+            throw new TypeError("Privilege is required");
     }
 
     async insert() {
         var res = false;
+        if(this.isTrusted)
+            throw new TypeError("Replication error");
         this.isValid();
         try {
             var [found] = await connection(UserRoleGrant._tablename_)
@@ -464,6 +497,7 @@ class UserRoleGrant extends Model {
                         createdAt: this.createdAt
                     });
             }
+            this.#isTrusted = true;
             res = true;
             UserRole.load(this.role.id);
         } catch (err) {
@@ -478,6 +512,8 @@ class UserRoleGrant extends Model {
 
     async delete() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("User role grant is unreliable, please load it from database first");
         this.isValid();
         if(this.role.id == 1)
             throw new CustomError("Administrator grants cannot be removed")

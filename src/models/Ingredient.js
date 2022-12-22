@@ -23,6 +23,9 @@ class Ingredient extends Model {
         this.fieldRewriter.add('deletedAt', `${this._tablename_}.deletedAt`, `${this._tablename_}_deletedAt`);
     }
 
+    #wasEdited = true;
+    #isTrusted = false;
+
     #props = {
         id: null,
         name: null,
@@ -49,6 +52,7 @@ class Ingredient extends Model {
                 throw new CustomError("Name can't be too long (max. length = 40)");
             this.#props.name = value;
         }
+        this.#wasEdited = true;
     }
     
     set description(value) {
@@ -62,7 +66,11 @@ class Ingredient extends Model {
                 throw new CustomError("Description can't be too long (max. length = 100)");
             this.#props.description = value;
         }
+        this.#wasEdited = true;
     }
+
+    get wasEdited() { return this.#wasEdited }
+    get isTrusted() { return this.#isTrusted }
     
     get id() { return this.#props.id; }
     get name() { return this.#props.name; }
@@ -86,6 +94,8 @@ class Ingredient extends Model {
         this.#props.createdAt = this.createdAt!=undefined? new Date(this.createdAt): this.createdAt;
         this.#props.updatedAt = this.updatedAt!=undefined? new Date(this.updatedAt): this.updatedAt;
         this.#props.deletedAt = this.deletedAt!=undefined? new Date(this.deletedAt): this.deletedAt;
+        this.#wasEdited = false;
+        this.#isTrusted = true;
         return this;
     }
 
@@ -161,6 +171,8 @@ class Ingredient extends Model {
 
     async insert() {
         var res = false;
+        if(this.isTrusted)
+            throw new TypeError("Replication error");
         this.isValid();
         try {
             var [found] = await connection(Ingredient._tablename_)
@@ -207,6 +219,10 @@ class Ingredient extends Model {
 
     async update() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Ingredient is unreliable, please load it from database");
+        if(!this.wasEdited)
+            throw new TypeError("Nothing to update");
         this.isValid();
         try {
             var [found] = await connection(Ingredient._tablename_)
@@ -223,6 +239,7 @@ class Ingredient extends Model {
                         updatedAt: this.updatedAt
                     })
                     .where({ id: this.id });
+                this.#isTrusted = true;
                 res = true;
             }
         } catch (err) {
@@ -237,6 +254,8 @@ class Ingredient extends Model {
 
     async delete() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Ingredient is unreliable, please load it from database");
         try {
             this.#props.deletedAt = new Date;
             var data = await connection(Ingredient._tablename_)

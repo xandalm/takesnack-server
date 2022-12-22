@@ -30,6 +30,9 @@ class Product extends Model {
         this.fieldRewriter.add('deletedAt', `${this._tablename_}.deletedAt`, `${this._tablename_}_deletedAt`);
     }
 
+    #wasEdited = true;
+    #isTrusted = false;
+
     #props = {
         id: null,
         name: null,
@@ -60,6 +63,7 @@ class Product extends Model {
                 throw new CustomError("Name can't be too long (max. length = 40)");
             this.#props.name = value;
         }
+        this.#wasEdited = true;
     }
     
     set description(value) {
@@ -73,6 +77,7 @@ class Product extends Model {
                 throw new CustomError("Description can't be too long (max. length = 100)");
             this.#props.description = value;
         }
+        this.#wasEdited = true;
     }
 
     set category(value) {
@@ -83,6 +88,7 @@ class Product extends Model {
                 throw new TypeError("Must be ProductCategory type");
             this.#props.category = value;
         }
+        this.#wasEdited = true;
     }
     
     set price(value) {
@@ -93,6 +99,7 @@ class Product extends Model {
                 throw new TypeError("Must be number type");
             this.#props.price = Math.trunc(value * 100) / 100;
         }
+        this.#wasEdited = true;
     }
     
     set status(value) {
@@ -103,7 +110,11 @@ class Product extends Model {
                 throw new TypeError("Must be ProductStatus type");
             this.#props.status = value;
         }
+        this.#wasEdited = true;
     }
+
+    get wasEdited() { return this.#wasEdited }
+    get isTrusted() { return this.#isTrusted }
     
     get id() { return this.#props.id; }
     get name() { return this.#props.name; }
@@ -139,6 +150,8 @@ class Product extends Model {
         this.#props.createdAt = this.createdAt!=undefined? new Date(this.createdAt): this.createdAt;
         this.#props.updatedAt = this.updatedAt!=undefined? new Date(this.updatedAt): this.updatedAt;
         this.#props.deletedAt = this.deletedAt!=undefined? new Date(this.deletedAt): this.deletedAt;
+        this.#wasEdited = false;
+        this.#isTrusted = true;
         return this;
     }
 
@@ -244,6 +257,8 @@ class Product extends Model {
 
     async insert() {
         var res = false;
+        if(this.#isTrusted)
+            throw new TypeError("Replication error");
         this.isValid();
         try {
             this.status = await ProductStatus.get(2); // INACTIVE
@@ -268,7 +283,6 @@ class Product extends Model {
                             deletedAt: this.deletedAt
                         })
                         .where({ id: this.id });
-                    res = true;
                 }
             } else {
                 this.#props.id = uuid();
@@ -283,8 +297,9 @@ class Product extends Model {
                         status: this.status.id,
                         createdAt: this.createdAt
                     });
-                res = true;
             }
+            this.#isTrusted = true;
+            res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);
             if(err instanceof SqliteError)
@@ -297,6 +312,10 @@ class Product extends Model {
 
     async update() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Product is unreliable, please load it from database first");
+        if(!this.wasEdited)
+            throw new TypeError("Nothing to update");
         this.isValid();
         try {
             var [found] = await connection(Product._tablename_)
@@ -330,6 +349,8 @@ class Product extends Model {
 
     async delete() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Product is unreliable, please load it from database first");
         try {
             this.#props.deletedAt = this.deletedAt??new Date;
             var data = await connection(Product._tablename_)
@@ -365,6 +386,9 @@ class ProductIngredient extends Model {
         this.fieldRewriter.add('deletedAt', `${this._tablename_}.deletedAt`, `${this._tablename_}_deletedAt`);
     }
 
+    #wasEdited = true;
+    #isTrusted = false;
+
     #props={
         product: null,
         ingredient: null,
@@ -389,6 +413,7 @@ class ProductIngredient extends Model {
                 throw new Error("'value' must be Product type");
             this.#props.product = value;
         }
+        this.#wasEdited = true;
     }
 
     set ingredient(value) {
@@ -399,6 +424,7 @@ class ProductIngredient extends Model {
                 throw new TypeError("'value' must be Ingredient type");
             this.#props.ingredient = value;
         }
+        this.#wasEdited = true;
     }
 
     set quantity(value) {
@@ -409,6 +435,7 @@ class ProductIngredient extends Model {
                 throw new TypeError("'value' must be positive integer type");
             this.#props.quantity = value;
         }
+        this.#wasEdited = true;
     }
 
     get product() { return this.#props.product; }
@@ -432,6 +459,8 @@ class ProductIngredient extends Model {
         };
         this.#props.createdAt = this.createdAt? new Date(this.createdAt): this.createdAt;
         this.#props.deletedAt = this.deletedAt? new Date(this.deletedAt): this.deletedAt;
+        this.#wasEdited = false;
+        this.#isTrusted = true;
         return this;
     }
 
@@ -503,15 +532,21 @@ class ProductIngredient extends Model {
 
     isValid() {
         if(!this.product)
-            throw new CustomError("Product is required");
+            throw new TypeError("Product is required");
+        if(!this.product.isTrusted || this.product.wasEdited)
+            throw new TypeError("Product is unreliable, please load it from database first and do not edit");
         if(!this.ingredient)
-            throw new CustomError("Ingredient is required");
+            throw new TypeError("Ingredient is required");
+        if(!this.ingredient.isTrusted || this.ingredient.wasEdited)
+            throw new TypeError("Ingredient is unreliable, please load it from database first and do not edit");
         if(!this.quantity)
-            throw new CustomError("Quantity is required");
+            throw new TypeError("Quantity is required");
     }
 
     async insert() {
         var res = false;
+        if(this.isTrusted)
+            throw new TypeError("Replication error");
         this.isValid();
         try {
             var [found] = await connection(ProductIngredient._tablename_)
@@ -530,7 +565,6 @@ class ProductIngredient extends Model {
                             deletedAt: this.deletedAt
                         })
                         .where({ product: this.product.id, ingredient: this.ingredient.id })
-                    res = true;
                 }
             } else {
                 this.#props.createdAt = new Date;
@@ -541,8 +575,9 @@ class ProductIngredient extends Model {
                         quantity: this.quantity,
                         createdAt: this.createdAt
                     });
-                res = true;
             }
+            this.#isTrusted = true;
+            res = true;
         } catch (err) {
             if(isDevelopment)
             if(err instanceof SqliteError)
@@ -555,6 +590,10 @@ class ProductIngredient extends Model {
 
     async update() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Product ingredient is unreliable, please load it from database");
+        if(!this.wasEdited)
+            throw new TypeError("Nothing to update");
         this.isValid();
         try {
             var [found] = await connection(ProductIngredient._tablename_)
@@ -584,6 +623,8 @@ class ProductIngredient extends Model {
     }
 
     async delete() {
+        if(!this.isTrusted)
+            throw new TypeError("Product ingredient is unreliable, please load it from database");
         var res = false;
         try {
             this.#props.deletedAt = this.deletedAt??new Date;

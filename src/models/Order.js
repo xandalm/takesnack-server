@@ -30,6 +30,9 @@ class Order extends Model {
         this.fieldRewriter.add('deletedAt', `${this._tablename_}.deletedAt`, `${this._tablename_}_deletedAt`);
     }
 
+    #wasEdited = true;
+    #isTrusted = false;
+
     #props = {
         id: null,
         customer: null,
@@ -58,6 +61,7 @@ class Order extends Model {
                 throw new TypeError("Must be Customer type");
             this.#props.customer = value;
         }
+        this.#wasEdited = true;
     }
 
     set deliveryType(value) {
@@ -68,6 +72,7 @@ class Order extends Model {
                 throw new TypeError("Must be DeliveryType type");
             this.#props.deliveryType = value;
         }
+        this.#wasEdited = true;
     }
 
     set deliveryTo(value) {
@@ -78,6 +83,7 @@ class Order extends Model {
                 throw new TypeError("Must be string type");
             this.#props.deliveryTo = value;
         }
+        this.#wasEdited = true;
     }
 
     set status(value) {
@@ -88,7 +94,11 @@ class Order extends Model {
                 throw new TypeError("Must be OrderStatus type");
             this.#props.status = value;
         }
+        this.#wasEdited = true;
     }
+
+    get wasEdited() { return this.#wasEdited; }
+    get isTrusted() { return this.#isTrusted; }
 
     get id() { return this.#props.id }
     get customer() { return this.#props.customer }
@@ -126,6 +136,8 @@ class Order extends Model {
         this.#props.createdAt = this.createdAt!=undefined? new Date(this.createdAt): this.createdAt;
         this.#props.updatedAt = this.updatedAt!=undefined? new Date(this.updatedAt): this.updatedAt;
         this.#props.deletedAt = this.deletedAt!=undefined? new Date(this.deletedAt): this.deletedAt;
+        this.#wasEdited = false;
+        this.#isTrusted = true;
         return this;
     }
 
@@ -250,6 +262,8 @@ class Order extends Model {
 
     async insert() {
         var res = false;
+        if(this.isTrusted)
+            throw new TypeError("Replication error");
         this.status = await OrderStatus.get(OrderStatus.IN_QUEUE);
         this.isValid();
         try {
@@ -266,6 +280,7 @@ class Order extends Model {
                     status: this.#props.status.id,
                     createdAt: this.#props.createdAt
                 });
+            this.#isTrusted = true;
             res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);
@@ -279,6 +294,10 @@ class Order extends Model {
 
     async update() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Order is unreliable, please load it from database first");
+        if(!this.wasEdited)
+            throw new TypeError("Nothing to update");
         this.isValid();
         try {
             var [found] = await connection(Order._tablename_)
@@ -310,6 +329,8 @@ class Order extends Model {
 
     async delete() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Order is unreliable, please load it from database first");
         try {
             var [found] = await connection(Order._tablename_)
                 .select(Order.fieldRewriter.absolutes.status)
@@ -341,6 +362,9 @@ class Order extends Model {
 class OrderItem extends Model {
 
     static _tablename_ = 'OrderItem';
+
+    #wasEdited = true;
+    #isTrusted = false;
 
     #props={
         order: null,
@@ -379,6 +403,7 @@ class OrderItem extends Model {
                 throw new Error("'value' must be Order type");
             this.#props.order = value;
         }
+        this.#wasEdited = true;
     }
 
     set product(value) {
@@ -389,6 +414,7 @@ class OrderItem extends Model {
                 throw new TypeError("'value' must be Product type");
             this.#props.product = value;
         }
+        this.#wasEdited = true;
     }
 
     set quantity(value) {
@@ -399,7 +425,11 @@ class OrderItem extends Model {
                 throw new TypeError("'value' must be positive integer type");
             this.#props.quantity = value;
         }
+        this.#wasEdited = true;
     }
+
+    get wasEdited() { return this.#wasEdited }
+    get isTrusted() { return this.#isTrusted }
 
     get order() { return this.#props.order }
     get product() { return this.#props.product }
@@ -426,6 +456,8 @@ class OrderItem extends Model {
         this.#props.createdAt = this.createdAt? new Date(this.createdAt): this.createdAt;
         this.#props.updatedAt = this.updatedAt? new Date(this.updatedAt): this.updatedAt;
         this.#props.deletedAt = this.deletedAt? new Date(this.deletedAt): this.deletedAt;
+        this.#wasEdited = false;
+        this.#isTrusted = true;
         return this;
     }
 
@@ -506,15 +538,21 @@ class OrderItem extends Model {
 
     isValid() {
         if(!this.order)
-            throw new CustomError("Order is required");
+            throw new TypeError("Order is required");
+        if(!this.order.isTrusted || this.order.wasEdited)
+            throw new TypeError("Order is unreliable, please load it from the database and do not edit");
         if(!this.product)
-            throw new CustomError("Product is required");
+            throw new TypeError("Product is required");
+        if(!this.product.isTrusted || this.product.wasEdited)
+            throw new TypeError("Product is unreliable, please load it from the database and do not edit");
         if(!this.quantity)
-            throw new CustomError("Quantity is required");
+            throw new TypeError("Quantity is required");
     }
 
     async insert() {
         var res = false;
+        if(this.isTrusted)
+            throw new TypeError("Replication error");
         this.isValid();
         try {
             const transaction = await connection.transaction();
@@ -558,6 +596,7 @@ class OrderItem extends Model {
                         .where({ order: this.#props.order.id, product: this.#props.product.id });
                 }
                 transaction.commit();
+                this.#isTrusted = true;
                 res = true;
             } catch (err) {
                 transaction.rollback();
@@ -575,6 +614,10 @@ class OrderItem extends Model {
 
     async update() {
         var res;
+        if(!this.isTrusted)
+            throw new TypeError("Order item is unreliable, please load it from database first");
+        if(!this.wasEdited)
+            throw new TypeError("Nothing to update");
         this.isValid();
         try {
             var [found] = await connection(OrderItem._tablename_)
@@ -607,6 +650,8 @@ class OrderItem extends Model {
 
     async delete() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Order item is unreliable, please load it from database first");
         try {
             this.#props.deletedAt = this.#props.deletedAt??new Date;
             var [{ count }] = await connection(OrderItem._tablename_)

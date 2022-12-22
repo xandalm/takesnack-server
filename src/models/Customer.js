@@ -27,6 +27,9 @@ class Customer extends Model {
         this.fieldRewriter.add('deletedAt', `${this._tablename_}.deletedAt`, `${this._tablename_}_deletedAt`);
     }
 
+    #wasEdited = true;
+    #isTrusted = false;
+
     #props={
         id: null,
         name: null,
@@ -54,6 +57,7 @@ class Customer extends Model {
             value = value.trim();
             this.#props.name = value;
         }
+        this.#wasEdited = true;
     }
 
     set phoneNumber(value) {
@@ -65,7 +69,7 @@ class Customer extends Model {
             value = value.trim();
             this.#props.phoneNumber = value;
         }
-        return this;
+        this.#wasEdited = true;
     }
 
     set pwd(value) {
@@ -79,7 +83,7 @@ class Customer extends Model {
                 throw new CustomError("Invalid characters");
             this.#props.pwd = createHmac('sha256', '@TakeSnack#CustomerSecret').update(value).digest('hex');
         }
-        return this;
+        this.#wasEdited = true;
     }
 
     set status(value) {
@@ -90,8 +94,12 @@ class Customer extends Model {
                 throw new CustomError("Must be CustomerStatus type");
             this.#props.status = value;
         }
+        this.#wasEdited = true;
     }
 
+    get wasEdited() { return this.#wasEdited }
+    get isTrusted() { return this.#isTrusted }
+    
     get id() { return this.#props.id }
     get name() { return this.#props.name }
     get phoneNumber() { return this.#props.phoneNumber }
@@ -118,6 +126,8 @@ class Customer extends Model {
         this.#props.createdAt = this.createdAt!=undefined? new Date(this.createdAt): this.createdAt;
         this.#props.updatedAt = this.updatedAt!=undefined? new Date(this.updatedAt): this.updatedAt;
         this.#props.deletedAt = this.deletedAt!=undefined? new Date(this.deletedAt): this.deletedAt;
+        this.#wasEdited = false;
+        this.#isTrusted = true;
         return this;
     }
 
@@ -261,6 +271,8 @@ class Customer extends Model {
 
     async insert() {
         var res = false;
+        if(this.isTrusted)
+            throw new TypeError("Replication error");
         this.isValid();
         try {
             this.status = await CustomerStatus.get(1); // ACTIVE
@@ -283,7 +295,6 @@ class Customer extends Model {
                             deletedAt: this.deletedAt
                         })
                         .where({ id: this.id });
-                    res = true;
                 }
             } else {
                 this.#props.id = uuid();
@@ -297,8 +308,9 @@ class Customer extends Model {
                         status: this.status.id,
                         createdAt: this.createdAt
                     });
-                res = true;
             }
+            this.#isTrusted = true;
+            res = true;
         } catch (err) {
             if(isDevelopment) console.log(err);
             if(err instanceof SqliteError)
@@ -311,6 +323,10 @@ class Customer extends Model {
 
     async update() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Customer is unreliable, please load it from database");
+        if(!this.wasEdited)
+            throw new TypeError("Nothing to update");
         this.isValid();
         try {
             var [found] = await connection(Customer._tablename_)
@@ -342,6 +358,8 @@ class Customer extends Model {
     }
 
     async delete() {
+        if(!this.isTrusted)
+            throw new TypeError("Customer is unreliable, please load it from database");
         var res = false;
         try {
             this.#props.deletedAt = this.deletedAt??new Date;

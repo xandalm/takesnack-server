@@ -61,6 +61,9 @@ class User extends Model {
         .then(has => this.hasAdmin = has);
     }
 
+    #wasEdited = true;
+    #isTrusted = false;
+
     #props={
         id: null,
         name: null,
@@ -89,6 +92,7 @@ class User extends Model {
             value = value.trim();
             this.#props.name = value;
         }
+        this.#wasEdited = true;
     }
 
     set phoneNumber(value) {
@@ -100,7 +104,7 @@ class User extends Model {
             value = value.trim();
             this.#props.phoneNumber = value;
         }
-        return this;
+        this.#wasEdited = true;
     }
 
     set pwd(value) {
@@ -114,7 +118,7 @@ class User extends Model {
                 throw new CustomError("Invalid characters");
             this.#props.pwd = createHmac('sha256', '@TakeSnack#UserSecret').update(value).digest('hex');
         }
-        return this;
+        this.#wasEdited = true;
     }
 
     set role(value) {
@@ -125,6 +129,7 @@ class User extends Model {
                 throw new CustomError("Must be UserRole type");
             this.#props.role = value;
         }
+        this.#wasEdited = true;
     }
 
     set status(value) {
@@ -135,7 +140,11 @@ class User extends Model {
                 throw new CustomError("Must be UserStatus type");
             this.#props.status = value;
         }
+        this.#wasEdited = true;
     }
+
+    get wasEdited() { return this.#wasEdited }
+    get isTrusted() { return this.#isTrusted }
 
     get id() { return this.#props.id }
     get name() { return this.#props.name }
@@ -167,6 +176,8 @@ class User extends Model {
         this.#props.createdAt = this.createdAt!=undefined? new Date(this.createdAt): this.createdAt;
         this.#props.updatedAt = this.updatedAt!=undefined? new Date(this.updatedAt): this.updatedAt;
         this.#props.deletedAt = this.deletedAt!=undefined? new Date(this.deletedAt): this.deletedAt;
+        this.#wasEdited = false;
+        this.#isTrusted = true;
         return this;
     }
 
@@ -319,6 +330,8 @@ class User extends Model {
 
     async insert() {
         var res = false;
+        if(this.isTrusted)
+            throw new TypeError("Replication error");
         this.isValid();
         try {
             this.status = await UserStatus.get(1); // ACTIVE
@@ -359,6 +372,7 @@ class User extends Model {
                         createdAt: this.createdAt
                     });
             }
+            this.#isTrusted = true;
             res = true;
             User.hasAdmin = true; // TRUST
         } catch (err) {
@@ -373,6 +387,10 @@ class User extends Model {
 
     async update() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("Product category is unreliable, please load it from database first");
+        if(!this.wasEdited)
+            throw new TypeError("Nothing to update");
         this.isValid();
         try {
             var [found] = await connection(User._tablename_)
@@ -407,6 +425,8 @@ class User extends Model {
 
     async delete() {
         var res = false;
+        if(!this.isTrusted)
+            throw new TypeError("User is unreliable, please load it from database first");
         try {
             this.#props.deletedAt = this.deletedAt??new Date;
             var data = await connection(User._tablename_)
