@@ -91,13 +91,16 @@ class Order extends Model {
     }
 
     get id() { return this.#props.id }
-    get customer() {
-        return Customer.get(this.#props.customer.id)
-    }
+    get customer() { return this.#props.customer }
     get deliveryType() { return this.#props.deliveryType }
     get deliveryTo() { return this.#props.deliveryTo }
     get items() {
-        return OrderItem.getOrderProducts(this.id);
+        if(this.#props.items != null)
+            return this.#props.items;
+        return (async (role) => {
+            role.#props.items = await OrderItem.getOrderProducts(this.id);
+            return role.#props.items;
+        })(this);
     }
     get total() { return this.#props.total }
     get status() { return this.#props.status }
@@ -166,12 +169,13 @@ class Order extends Model {
             })
             .select(
                 this.fieldRewriter.alias.all().concat(
-                    `${this.fieldRewriter.aliases.customer} as ${Customer.fieldRewriter.aliases.id}`,
+                    Customer.fieldRewriter.transform.all(),
                     DeliveryType.fieldRewriter.transform.all(),
                     OrderStatus.fieldRewriter.transform.all()
                 )
             )
             .from('A')
+            .join(Customer._tablename_, this.fieldRewriter.aliases.customer, Customer.fieldRewriter.absolutes.id)
             .join(DeliveryType._tablename_, this.fieldRewriter.aliases.deliveryType, DeliveryType.fieldRewriter.absolutes.id)
             .join(OrderStatus._tablename_, this.fieldRewriter.aliases.status, OrderStatus.fieldRewriter.absolutes.id)
             .first();
@@ -206,17 +210,19 @@ class Order extends Model {
             })
             .select(
                 this.fieldRewriter.alias.all().concat(
+                    Customer.fieldRewriter.transform.all(),
                     DeliveryType.fieldRewriter.transform.all(),
                     OrderStatus.fieldRewriter.transform.all()
                 )
             )
             .from('A')
+            .join(Customer._tablename_, this.fieldRewriter.aliases.customer, Customer.fieldRewriter.absolutes.id)
             .join(DeliveryType._tablename_, this.fieldRewriter.aliases.deliveryType, DeliveryType.fieldRewriter.absolutes.id)
             .join(OrderStatus._tablename_, this.fieldRewriter.aliases.status, OrderStatus.fieldRewriter.absolutes.id);
 
             res = Array.from(data).map(async e => (new Order)._fromDB({
                 ...e,
-                customer: await Customer.get(e[`${this._tablename_}_customer`]),
+                customer: (new Customer)._fromDB(e),
                 deliveryType: (new DeliveryType)._fromDB(e),
                 status: (new OrderStatus)._fromDB(e)
             }));
@@ -432,8 +438,6 @@ class OrderItem extends Model {
     static async getOrderProducts(orderId) {
         var res = [];
         try {
-            // await connection(OrderItem._tablename_).where({ product: "c0c51491-c34a-4aa8-b7bd-69e5d71a73cb" }).delete();
-            // await connection(Order._tablename_).update({ total: 0.0 }).where({ id: "baa500f2-1b18-482c-a00a-b3f73f168fc6"});
             const order = await Order.get(orderId);
             if(!order)
                 throw new CustomError("The order doesn't exist");
@@ -525,9 +529,10 @@ class OrderItem extends Model {
                 .select('*')
                 .where({ order: this.#props.order.id, product: this.#props.product.id });
             try {
+                if(!this.#props.product.price)
+                    throw new CustomError("Product not yet listed");
                 if(!found) {
-                    this.#props.createdAt = new Date(found.createdAt);
-                    this.#props.updatedAt = new Date;
+                    this.#props.createdAt = new Date;
                     this.#props.price = this.#props.product.price;
                     await transaction(OrderItem._tablename_)
                         .insert({
@@ -537,7 +542,6 @@ class OrderItem extends Model {
                             price: this.#props.price,
                             createdAt: this.#props.createdAt
                         });
-                    res = true;
                 } else if(found.deletedAt == null) {
                     throw new CustomError("Product already included");
                 } else {
@@ -552,9 +556,9 @@ class OrderItem extends Model {
                             deletedAt: this.#props.deletedAt
                         })
                         .where({ order: this.#props.order.id, product: this.#props.product.id });
-                    res = true;
                 }
                 transaction.commit();
+                res = true;
             } catch (err) {
                 transaction.rollback();
                 throw err;
@@ -580,7 +584,7 @@ class OrderItem extends Model {
                 throw new CustomError("Order item not exist");
             } else {
                 this.#props.updatedAt = new Date;
-                this.#props.price = this.#props.product.price;
+                this.#props.price = found.price;
                 await connection(OrderItem._tablename_)
                     .update({
                         order: this.#props.order.id,
@@ -602,7 +606,7 @@ class OrderItem extends Model {
     }
 
     async delete() {
-        var res = false;    
+        var res = false;
         try {
             this.#props.deletedAt = this.#props.deletedAt??new Date;
             var [{ count }] = await connection(OrderItem._tablename_)
