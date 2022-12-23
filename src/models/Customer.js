@@ -1,12 +1,16 @@
 const { v4:uuid } = require('uuid');
 const { createHmac } = require('crypto');
-const { isDevelopment } = require('../config/server.config');
+const { isDevelopment, CUSTOMER_SECRET } = require('../config/server.config');
 const connection = require('../database/connection');
 const CustomError = require("../utils/errors");
 const FieldRewriter = require('../utils/field-rewriter');
 const Model = require("./model");
 const { CustomerStatus } = require('./CustomerStatus');
 const { SqliteError } = require("better-sqlite3");
+
+function transformPWD(value) {
+    return createHmac('sha256', CUSTOMER_SECRET).update(value).digest('hex');
+}
 
 class Customer extends Model {
 
@@ -81,7 +85,7 @@ class Customer extends Model {
             value = value.trim();
             if(!/^[\x21-\x7E]*$/.test(value))
                 throw new CustomError("Invalid characters");
-            this.#props.pwd = createHmac('sha256', '@TakeSnack#CustomerSecret').update(value).digest('hex');
+            this.#props.pwd = transformPWD(value);
         }
         this.#wasEdited = true;
     }
@@ -228,7 +232,7 @@ class Customer extends Model {
             throw new TypeError("Password(pwd) must be string");
         if(!/^[\x21-\x7E]*$/.test(pwd))
             throw new CustomError("Invalid credentials");
-        pwd = createHmac('sha256', '@TakeSnack#CustomerSecret').update(pwd).digest('hex');
+        pwd = transformPWD(pwd);
         try {
             var data = await connection.with('A', (c) => {
                 c.select(Customer.fieldRewriter.transform.all())

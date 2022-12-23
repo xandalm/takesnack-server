@@ -2,13 +2,13 @@ const express = require('express');
 const compression = require('compression');
 const { graphqlHTTP } = require('express-graphql');
 const GQLSchema = require('./graphql');
-const { isDevelopment } = require('./config/server.config');
+const { isDevelopment, JWT_SECRET } = require('./config/server.config');
 const { JWT, JWTExpiration } = require('./utils/jwt');
 const CustomError = require('./utils/errors');
 const app = express();
 
 JWT.setConfig({
-    secret: 'topsecret',
+    secret: JWT_SECRET,
     claims: {
         iss: 'takesnack',
         aud: 'takesnack-client'
